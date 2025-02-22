@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}In Mã Sản Phẩm{% endblock %}
+{% block content %}
+<div class="card shadow-sm print-area">
+  <div class="card-header bg-primary text-white text-center">
+    <h4>Thông Tin Sản Phẩm</h4>
+  </div>
+  <div class="card-body text-center">
+    <h5>Mã SP: {{ product.product_code }}</h5>
+    <img src="{{ url_for('get_qr', product_id=product.id) }}" alt="QR Code" class="img-fluid my-3" style="max-width:250px;">
+    <div class="print-details text-start">
+      <p><strong>Tên SP:</strong> {{ product.product_name }}</p>
+      <p><strong>Số Seri:</strong> {{ product.serial_number }}</p>
+      <p><strong>Ngày Nhập:</strong> {{ product.date_entry.strftime("%d/%m/%Y %H:%M") }}</p>
+      <p><strong>Bộ Phận:</strong> {{ product.department }}</p>
+      <p><strong>Tình Trạng:</strong> {{ product.status }}</p>
+    </div>
+  </div>
+  <div class="card-footer text-center">
+    <button onclick="window.print();" class="btn btn-primary"><i class="fas fa-print"></i> In Trang</button>
+    <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Quay Lại</a>
+  </div>
+</div>
+<style>
+@media print {
+  body * { visibility: hidden; }
+  .print-area, .print-area * { visibility: visible; }
+  .print-area { position: absolute; left: 0; top: 0; width: 100%; }
+}
+</style>
+{% endblock %}

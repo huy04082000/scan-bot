@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Hệ Thống Quản Lý Sản Phẩm Doanh Nghiệp{% endblock %}</title>
+  <!-- Bootstrap 5 CSS sử dụng theme Lux (sang trọng và hiện đại) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootswatch@5/dist/lux/bootstrap.min.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- CSS tùy chỉnh -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="d-flex" id="wrapper">
+    <!-- Sidebar -->
+    <nav id="sidebar" class="bg-primary">
+      <div class="sidebar-header text-center py-4 text-white">
+        <h3>Doanh Nghiệp</h3>
+        <small>Quản Lý Sản Phẩm</small>
+      </div>
+      <ul class="list-unstyled components">
+        <li>
+          <a href="{{ url_for('index') }}">
+            <i class="fas fa-home"></i> Trang Chủ
+          </a>
+        </li>
+        {% if current_user.is_authenticated %}
+          {% if current_user.role in ['manager', 'admin'] %}
+          <li>
+            <a href="{{ url_for('add_product') }}">
+              <i class="fas fa-plus-circle"></i> Thêm Sản Phẩm
+            </a>
+          </li>
+          {% endif %}
+          {% if current_user.role == 'admin' %}
+          <li>
+            <a href="{{ url_for('admin_panel') }}">
+              <i class="fas fa-users-cog"></i> Quản Trị
+            </a>
+          </li>
+          {% endif %}
+          <li>
+            <a href="{{ url_for('logout') }}">
+              <i class="fas fa-sign-out-alt"></i> Đăng Xuất
+            </a>
+          </li>
+        {% else %}
+          <li>
+            <a href="{{ url_for('login') }}">
+              <i class="fas fa-sign-in-alt"></i> Đăng Nhập
+            </a>
+          </li>
+          <li>
+            <a href="{{ url_for('register') }}">
+              <i class="fas fa-user-plus"></i> Đăng Ký
+            </a>
+          </li>
+        {% endif %}
+        <li>
+          <a href="{{ url_for('scan_qr') }}">
+            <i class="fas fa-qrcode"></i> Quét QR
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Nội dung trang -->
+    <div id="page-content-wrapper">
+      <!-- Header Top Bar -->
+      <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+        <button class="btn btn-outline-primary" id="menu-toggle">
+          <i class="fas fa-bars"></i> Menu
+        </button>
+        <div class="ms-auto">
+          {% block header %}
+          <h5 class="mb-0">Hệ Thống Quản Lý Sản Phẩm</h5>
+          {% endblock %}
+        </div>
+      </nav>
+
+      <!-- Nội dung chính -->
+      <div class="container-fluid my-4">
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+              {% for message in messages %}
+                <p class="mb-0">{{ message }}</p>
+              {% endfor %}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Font Awesome -->
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- jQuery (cho hiệu ứng toggle) -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    $("#menu-toggle").on("click", function(e) {
+      e.preventDefault();
+      $("#wrapper").toggleClass("toggled");
+    });
+  </script>
+</body>
+</html>

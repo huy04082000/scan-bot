@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Đăng Nhập - Quản Lý Sản Phẩm{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-5 col-md-7">
+    <div class="card shadow-sm">
+      <div class="card-header bg-primary text-white text-center">
+        <h4 class="mb-0">Đăng Nhập Hệ Thống</h4>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          <div class="mb-3">
+            <label for="username" class="form-label">Tên Đăng Nhập</label>
+            <input type="text" id="username" name="username" class="form-control" placeholder="Nhập tên đăng nhập" required autofocus>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">Mật Khẩu</label>
+            <input type="password" id="password" name="password" class="form-control" placeholder="Nhập mật khẩu" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="fas fa-sign-in-alt"></i> Đăng Nhập
+          </button>
+        </form>
+      </div>
+      <div class="card-footer text-center">
+        <small>Bạn chưa có tài khoản? <a href="{{ url_for('register') }}">Đăng Ký Ngay</a></small>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Thêm Sản Phẩm Mới{% endblock %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-header bg-primary text-white text-center">
+    <h4>Thêm Sản Phẩm Mới</h4>
+  </div>
+  <div class="card-body">
+    <form method="post">
+      <div class="mb-3">
+        <label for="product_name" class="form-label">Tên Sản Phẩm</label>
+        <input type="text" id="product_name" name="product_name" class="form-control" placeholder="Nhập tên sản phẩm" required>
+      </div>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="serial_number" class="form-label">Số Seri</label>
+          <input type="text" id="serial_number" name="serial_number" class="form-control" placeholder="Nhập số seri" required>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="date_issue" class="form-label">Ngày Cấp</label>
+          <input type="date" id="date_issue" name="date_issue" class="form-control" required>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="department" class="form-label">Bộ Phận</label>
+          <input type="text" id="department" name="department" class="form-control" placeholder="Nhập bộ phận" required>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="status" class="form-label">Tình Trạng</label>
+          <select id="status" name="status" class="form-select" required>
+            <option value="">Chọn tình trạng</option>
+            <option value="chạy tốt">Chạy Tốt</option>
+            <option value="đang sửa">Đang Sửa</option>
+            <option value="hỏng">Hỏng</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary w-100"><i class="fas fa-save"></i> Lưu Sản Phẩm</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

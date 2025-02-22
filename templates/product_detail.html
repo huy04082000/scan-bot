@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Chi Tiết Sản Phẩm{% endblock %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-header bg-primary text-white text-center">
+    <h4>Chi Tiết Sản Phẩm</h4>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-6">
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item"><strong>Ngày Nhập:</strong> {{ product.date_entry.strftime("%d/%m/%Y %H:%M") }}</li>
+          <li class="list-group-item"><strong>Mã SP:</strong> {{ product.product_code }}</li>
+          <li class="list-group-item"><strong>Tên SP:</strong> {{ product.product_name }}</li>
+          <li class="list-group-item"><strong>Số Seri:</strong> {{ product.serial_number }}</li>
+        </ul>
+      </div>
+      <div class="col-md-6">
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item"><strong>Ngày Cấp:</strong> {{ product.date_issue.strftime("%d/%m/%Y") }}</li>
+          <li class="list-group-item"><strong>Bộ Phận:</strong> {{ product.department }}</li>
+          <li class="list-group-item">
+            <strong>Tình Trạng:</strong>
+            {% if product.status == 'chạy tốt' %}
+              <span class="badge bg-success">{{ product.status }}</span>
+            {% elif product.status == 'đang sửa' %}
+              <span class="badge bg-warning text-dark">{{ product.status }}</span>
+            {% else %}
+              <span class="badge bg-danger">{{ product.status }}</span>
+            {% endif %}
+          </li>
+          <li class="list-group-item text-center">
+            <img src="{{ url_for('get_qr', product_id=product.id) }}" alt="QR Code" class="img-fluid" style="max-width:180px;">
+          </li>
+          <li class="list-group-item"><strong>Người Nhập:</strong> {% if product.entered_by_user and product.entered_by_user.full_name %} {{ product.entered_by_user.full_name }} {% else %} <em>---</em> {% endif %}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="card-footer text-center">
+    <a href="{{ url_for('print_product', product_id=product.id) }}" class="btn btn-secondary me-2"><i class="fas fa-print"></i> In Mã SP</a>
+    <a href="{{ url_for('get_qr', product_id=product.id) }}" download="qr_{{ product.product_code }}.png" class="btn btn-success me-2"><i class="fas fa-download"></i> Tải QR</a>
+    <a href="{{ url_for('index') }}" class="btn btn-primary"><i class="fas fa-arrow-left"></i> Quay Lại</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Quét Mã QR{% endblock %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-header bg-primary text-white text-center">
+    <h4>Quét Mã QR Sản Phẩm</h4>
+  </div>
+  <div class="card-body">
+    <form method="post">
+      <div class="mb-3">
+        <label for="qr_content" class="form-label">Nhập Nội Dung Mã QR</label>
+        <input type="text" id="qr_content" name="qr_content" class="form-control" placeholder="Nhập mã sản phẩm" required>
+      </div>
+      <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search"></i> Tra Cứu Sản Phẩm</button>
+    </form>
+    {% if product %}
+    <div class="mt-4">
+      <h5 class="text-center">Kết Quả Tra Cứu</h5>
+      <ul class="list-group">
+        <li class="list-group-item"><strong>Mã SP:</strong> {{ product.product_code }}</li>
+        <li class="list-group-item"><strong>Tên SP:</strong> {{ product.product_name }}</li>
+        <li class="list-group-item"><strong>Số Seri:</strong> {{ product.serial_number }}</li>
+        <li class="list-group-item">
+          <strong>Tình Trạng:</strong>
+          {% if product.status == 'chạy tốt' %}
+            <span class="badge bg-success">{{ product.status }}</span>
+          {% elif product.status == 'đang sửa' %}
+            <span class="badge bg-warning text-dark">{{ product.status }}</span>
+          {% else %}
+            <span class="badge bg-danger">{{ product.status }}</span>
+          {% endif %}
+        </li>
+      </ul>
+      <div class="text-center mt-3">
+        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-outline-info"><i class="fas fa-eye"></i> Xem Chi Tiết</a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

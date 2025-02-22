@@ -1,0 +1,238 @@
+/* ===== Global Settings ===== */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+:root {
+  --primary-color: #0d6efd;      /* Xanh chủ đạo */
+  --secondary-color: #6c757d;    /* Màu phụ */
+  --accent-color: #f1f1f1;       /* Nền phụ cho các card, footer */
+  --bg-light: #f7f9fc;           /* Nền tổng thể */
+  --text-color: #333;
+  --border-radius: 6px;
+  --transition-speed: 0.3s;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-color);
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+}
+
+/* ===== Layout ===== */
+#wrapper {
+  display: flex;
+  transition: all var(--transition-speed) ease;
+}
+
+/* ===== Sidebar ===== */
+#sidebar {
+  min-width: 250px;
+  max-width: 250px;
+  min-height: 100vh;
+  background: var(--primary-color);
+  transition: all var(--transition-speed) ease;
+  overflow-y: auto;
+}
+
+#wrapper.toggled #sidebar {
+  margin-left: -250px;
+}
+
+#sidebar .sidebar-header {
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+#sidebar .sidebar-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+#sidebar .sidebar-header small {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+#sidebar ul.components {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+#sidebar ul li {
+  padding: 12px 20px;
+  font-size: 1rem;
+}
+
+#sidebar ul li a {
+  color: #fff;
+  text-decoration: none;
+  display: block;
+  transition: background var(--transition-speed), padding-left var(--transition-speed);
+}
+
+#sidebar ul li a:hover,
+#sidebar ul li a.active {
+  background: rgba(0, 0, 0, 0.2);
+  padding-left: 25px;
+}
+
+/* ===== Page Content ===== */
+#page-content-wrapper {
+  width: 100%;
+  padding: 20px;
+}
+
+/* ===== Navbar ===== */
+.navbar {
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 10px 20px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+/* ===== Cards ===== */
+.card {
+  background-color: #fff;
+  border: none;
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.card-header {
+  background-color: var(--primary-color);
+  color: #fff;
+  padding: 15px 20px;
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.card-footer {
+  background-color: var(--accent-color);
+  padding: 15px 20px;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+/* ===== Tables ===== */
+.table-responsive {
+  margin-top: 20px;
+}
+
+.table {
+  background-color: #fff;
+  border: 1px solid #eaeaea;
+}
+
+.table thead th {
+  background-color: #343a40;
+  color: #fff;
+  padding: 10px;
+  vertical-align: middle;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.table tbody td {
+  padding: 10px;
+  vertical-align: middle;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+/* ===== Forms ===== */
+.form-control {
+  border-radius: var(--border-radius);
+  border: 1px solid #ced4da;
+  transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+.form-control:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* ===== Buttons ===== */
+.btn {
+  font-weight: 500;
+  border-radius: var(--border-radius);
+  padding: 10px 20px;
+  transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+  font-size: 1rem;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.btn i {
+  margin-right: 5px;
+}
+
+/* ===== Alerts ===== */
+.alert {
+  border-radius: var(--border-radius);
+  padding: 15px 20px;
+  font-size: 1rem;
+}
+
+/* ===== Input Groups ===== */
+.input-group-text {
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+}
+
+/* ===== Pagination ===== */
+.pagination .page-link {
+  font-size: 0.95rem;
+  padding: 8px 12px;
+}
+
+/* ===== Responsive Adjustments ===== */
+@media (max-width: 768px) {
+  #sidebar {
+    margin-left: -250px;
+  }
+  #wrapper.toggled #sidebar {
+    margin-left: 0;
+  }
+  #page-content-wrapper {
+    padding: 10px;
+  }
+}
+
+/* ===== Animations ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animated-title {
+  animation: fadeIn 0.8s ease-out;
+}
