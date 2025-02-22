@@ -6,3 +6,4 @@ pytz
 python-dotenv
 qrcode
 Werkzeug
+pillow
