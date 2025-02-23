@@ -1,137 +1,217 @@
 {% extends 'base.html' %}
-{% block title %}Trang Chủ - Quản Lý Sản Phẩm Doanh Nghiệp{% endblock %}
+{% block title %}Trang Chủ - Quản Lý Sản Phẩm{% endblock %}
+{% block header_title %}Tổng Quan Hệ Thống{% endblock %}
 {% block content %}
-<div class="card shadow-sm mb-4">
-  <div class="card-body">
-    <div class="row align-items-center">
-      <div class="col-md-6">
-        <h4 class="card-title mb-0">Danh Sách Sản Phẩm</h4>
+
+<div class="container-fluid">
+  <!-- Ô thống kê -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-3">
+      <div class="card stat-card">
+        <div class="card-body d-flex align-items-center">
+          <div class="stat-icon">
+            <i class="fas fa-cube"></i>
+          </div>
+          <div class="ms-3">
+            <h3>{{ total_products }}</h3>
+            <p>Tổng Sản Phẩm</p>
+          </div>
+        </div>
       </div>
-      <div class="col-md-6">
-        <!-- Ô tìm kiếm nổi bật -->
-        <div class="input-group">
-          <span class="input-group-text bg-primary text-white"><i class="fas fa-search"></i></span>
-          <input type="text" id="productSearch" class="form-control" placeholder="Tìm kiếm (Tên, Mã SP, Số Seri)..." autofocus>
+    </div>
+    <div class="col-md-3">
+      <div class="card stat-card">
+        <div class="card-body d-flex align-items-center">
+          <div class="stat-icon bg-success bg-opacity-10">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="ms-3">
+            <h3>{{ running_count }}</h3>
+            <p>Hoạt Động Tốt</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card stat-card">
+        <div class="card-body d-flex align-items-center">
+          <div class="stat-icon bg-warning bg-opacity-10">
+            <i class="fas fa-tools"></i>
+          </div>
+          <div class="ms-3">
+            <h3>{{ repairing_count }}</h3>
+            <p>Đang Sửa Chữa</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card stat-card">
+        <div class="card-body d-flex align-items-center">
+          <div class="stat-icon bg-danger bg-opacity-10">
+            <i class="fas fa-exclamation-circle"></i>
+          </div>
+          <div class="ms-3">
+            <h3>{{ broken_count }}</h3>
+            <p>Đang Hỏng</p>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<div class="card shadow-sm">
-  <div class="card-body p-0">
-    <div class="table-responsive">
-      <table class="table table-bordered table-hover align-middle mb-0" id="productTable">
-        <thead class="table-light">
-          <tr>
-            <th class="text-center" style="min-width: 130px;">Ngày Nhập</th>
-            <th class="text-center" style="min-width: 100px;">Mã SP</th>
-            <th style="min-width: 180px;">Tên SP</th>
-            <th class="text-center" style="min-width: 120px;">Số Seri</th>
-            <th class="text-center" style="min-width: 120px;">Ngày Cấp</th>
-            <th class="text-center" style="min-width: 120px;">Bộ Phận</th>
-            <th class="text-center" style="min-width: 100px;">Tình Trạng</th>
-            <th class="text-center" style="min-width: 100px;">Mã QR</th>
-            <th class="text-center" style="min-width: 140px;">Người Nhập</th>
-            <th class="text-center" style="min-width: 100px;">Chi Tiết</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for product in products.items %}
-          <tr>
-            <td class="text-center">{{ product.date_entry.strftime("%d/%m/%Y %H:%M") }}</td>
-            <td class="text-center">{{ product.product_code }}</td>
-            <td>{{ product.product_name }}</td>
-            <td class="text-center">{{ product.serial_number }}</td>
-            <td class="text-center">{{ product.date_issue.strftime("%d/%m/%Y") }}</td>
-            <td class="text-center">{{ product.department }}</td>
-            <td class="text-center">
-              {% if product.status == 'hỏng' %}
-                <span class="badge bg-danger py-2 px-3">Hỏng</span>
-              {% elif product.status == 'đang sửa' %}
-                <span class="badge bg-warning text-dark py-2 px-3">Đang Sửa</span>
-              {% else %}
-                <span class="badge bg-success py-2 px-3">Chạy Tốt</span>
-              {% endif %}
-            </td>
-            <td class="text-center">
-              <img src="{{ url_for('get_qr', product_id=product.id) }}" alt="QR" class="img-thumbnail" style="max-width: 80px;">
-            </td>
-            <td class="text-center">
-              {% if product.entered_by_user and product.entered_by_user.full_name %}
-                {{ product.entered_by_user.full_name }}
-              {% else %}
-                <em>---</em>
-              {% endif %}
-            </td>
-            <td class="text-center">
-              <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-eye me-1"></i> Xem
-              </a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+  <!-- Danh sách sản phẩm -->
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5><i class="fas fa-list-ul me-2"></i>Danh Sách Sản Phẩm</h5>
+      <!-- Form tìm kiếm và lọc tự động submit -->
+      <form class="d-flex align-items-center gap-2" method="get" action="{{ url_for('index') }}">
+        <!-- Input tìm kiếm -->
+        <div class="input-group">
+          <span class="input-group-text bg-white border-end-0">
+            <i class="fas fa-search"></i>
+          </span>
+          <input type="text"
+                 name="search"
+                 class="form-control border-start-0"
+                 placeholder="Tìm kiếm..."
+                 value="{{ search }}"
+                 oninput="debounceSubmit(this.form)" 
+          >
+        </div>
+        <!-- Dropdown lọc tình trạng -->
+        <select name="status" class="form-select" onchange="this.form.submit()">
+          <option value="">Tất cả</option>
+          <option value="chạy tốt" {% if status_filter == 'chạy tốt' %}selected{% endif %}>Hoạt Động Tốt</option>
+          <option value="đang sửa" {% if status_filter == 'đang sửa' %}selected{% endif %}>Đang Sửa Chữa</option>
+          <option value="hỏng" {% if status_filter == 'hỏng' %}selected{% endif %}>Đang Hỏng</option>
+        </select>
+        <!-- Nút Thêm Mới (nếu user có quyền) -->
+        {% if current_user.is_authenticated and current_user.role in ['manager', 'admin'] %}
+          <a href="{{ url_for('add_product') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Thêm Mới
+          </a>
+        {% endif %}
+      </form>
     </div>
+
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>NGÀY NHẬP</th>
+              <th>MÃ SP</th>
+              <th>TÊN SẢN PHẨM</th>
+              <th>SỐ SERI</th>
+              <th>BỘ PHẬN</th>
+              <th class="text-center">TRẠNG THÁI</th>
+              <th class="text-center">THAO TÁC</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for product in products.items %}
+            <tr>
+              <td>{{ product.date_entry.strftime("%d/%m/%Y %H:%M") }}</td>
+              <td><span class="text-primary">{{ product.product_code }}</span></td>
+              <td>{{ product.product_name }}</td>
+              <td>{{ product.serial_number }}</td>
+              <td>{{ product.department }}</td>
+              <td class="text-center">
+                {% if product.status == 'chạy tốt' %}
+                  <span class="badge bg-success">
+                    <i class="fas fa-check-circle me-1"></i>Hoạt Động Tốt
+                  </span>
+                {% elif product.status == 'đang sửa' %}
+                  <span class="badge bg-warning">
+                    <i class="fas fa-tools me-1"></i>Đang Sửa Chữa
+                  </span>
+                {% else %}
+                  <span class="badge bg-danger">
+                    <i class="fas fa-exclamation-circle me-1"></i>Đang Hỏng
+                  </span>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                <div class="btn-group">
+                  <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-sm btn-icon" title="Xem chi tiết">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  {% if current_user.is_authenticated and current_user.role in ['manager', 'admin'] %}
+                    <a href="{{ url_for('edit_product', product_id=product.id) }}" class="btn btn-sm btn-icon" title="Chỉnh sửa">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <button type="button" class="btn btn-sm btn-icon" title="Xóa" onclick="deleteProduct('{{ product.id }}')">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Phân trang -->
+    {% if products.pages > 1 %}
+    <div class="card-footer d-flex justify-content-between align-items-center">
+      <div>Hiển thị {{ products.items|length }} / {{ products.total }} sản phẩm</div>
+      <nav>
+        <ul class="pagination mb-0">
+          {% if products.has_prev %}
+          <li class="page-item">
+            <a class="page-link" 
+               href="{{ url_for('index', page=products.prev_num, search=search, status=status_filter) }}">
+              <i class="fas fa-chevron-left"></i>
+            </a>
+          </li>
+          {% endif %}
+          {% for page_num in products.iter_pages() %}
+            {% if page_num %}
+              <li class="page-item {% if page_num == products.page %}active{% endif %}">
+                <a class="page-link" 
+                   href="{{ url_for('index', page=page_num, search=search, status=status_filter) }}">
+                  {{ page_num }}
+                </a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+          {% endfor %}
+          {% if products.has_next %}
+          <li class="page-item">
+            <a class="page-link" 
+               href="{{ url_for('index', page=products.next_num, search=search, status=status_filter) }}">
+              <i class="fas fa-chevron-right"></i>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+    {% endif %}
   </div>
 </div>
 
-{% if products.total == 0 %}
-<div class="alert alert-info text-center mt-4">
-  Chưa có sản phẩm nào.
-</div>
-{% endif %}
-
-{% if products.pages > 1 %}
-<nav aria-label="Page navigation" class="mt-3">
-  <ul class="pagination justify-content-center">
-    {% if products.has_prev %}
-      <li class="page-item">
-        <a class="page-link" href="{{ url_for('index', page=products.prev_num) }}" aria-label="Previous">
-          <span aria-hidden="true">&laquo; Prev</span>
-        </a>
-      </li>
-    {% else %}
-      <li class="page-item disabled"><span class="page-link">&laquo; Prev</span></li>
-    {% endif %}
-
-    {% for page_num in products.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-      {% if page_num %}
-        {% if page_num == products.page %}
-          <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
-        {% else %}
-          <li class="page-item"><a class="page-link" href="{{ url_for('index', page=page_num) }}">{{ page_num }}</a></li>
-        {% endif %}
-      {% else %}
-        <li class="page-item disabled"><span class="page-link">…</span></li>
-      {% endif %}
-    {% endfor %}
-
-    {% if products.has_next %}
-      <li class="page-item">
-        <a class="page-link" href="{{ url_for('index', page=products.next_num) }}" aria-label="Next">
-          <span aria-hidden="true">Next &raquo;</span>
-        </a>
-      </li>
-    {% else %}
-      <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
-    {% endif %}
-  </ul>
-</nav>
-{% endif %}
-
-<!-- JavaScript lọc sản phẩm theo từ khóa -->
+<!-- Debounce function để tránh submit quá nhiều khi gõ -->
 <script>
-  document.getElementById("productSearch").addEventListener("keyup", function() {
-    const filter = this.value.toLowerCase();
-    const rows = document.querySelectorAll("#productTable tbody tr");
-    rows.forEach(row => {
-      const productCode = row.cells[1].textContent.toLowerCase();
-      const productName = row.cells[2].textContent.toLowerCase();
-      const serialNumber = row.cells[3].textContent.toLowerCase();
-      row.style.display = (productCode.includes(filter) || productName.includes(filter) || serialNumber.includes(filter)) ? "" : "none";
-    });
-  });
+  let debounceTimer;
+  function debounceSubmit(form) {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      form.submit();
+    }, 300);
+  }
+  
+  // Ví dụ hàm xóa sản phẩm (bạn cần hiện thực lại logic xóa trong backend)
+  function deleteProduct(productId) {
+    if (confirm("Bạn chắc chắn muốn xóa sản phẩm ID: " + productId + " ?")) {
+      // Ví dụ: chuyển hướng sang route xóa (bạn cần cài đặt route xóa)
+      window.location.href = "/delete_product/" + productId;
+    }
+  }
 </script>
+
 {% endblock %}

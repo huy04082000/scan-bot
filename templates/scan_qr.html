@@ -1,41 +1,116 @@
 {% extends 'base.html' %}
 {% block title %}Quét Mã QR{% endblock %}
+{% block header_title %}Quét Mã QR{% endblock %}
 {% block content %}
-<div class="card shadow-sm">
-  <div class="card-header bg-primary text-white text-center">
-    <h4>Quét Mã QR Sản Phẩm</h4>
-  </div>
-  <div class="card-body">
-    <form method="post">
-      <div class="mb-3">
-        <label for="qr_content" class="form-label">Nhập Nội Dung Mã QR</label>
-        <input type="text" id="qr_content" name="qr_content" class="form-control" placeholder="Nhập mã sản phẩm" required>
+<div class="container my-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <!-- Card quét bằng camera -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header">
+          <h5><i class="fas fa-camera me-2"></i>Quét Mã QR Bằng Camera</h5>
+        </div>
+        <div class="card-body text-center">
+          <!-- Khung quét (thư viện html5-qrcode sẽ render camera) -->
+          <div id="reader" style="width: 300px; margin: 0 auto;"></div>
+          <p class="mt-3 text-muted">
+            Hãy cấp quyền camera cho trình duyệt, sau đó đưa mã QR vào khung
+          </p>
+        </div>
       </div>
-      <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search"></i> Tra Cứu Sản Phẩm</button>
-    </form>
-    {% if product %}
-    <div class="mt-4">
-      <h5 class="text-center">Kết Quả Tra Cứu</h5>
-      <ul class="list-group">
-        <li class="list-group-item"><strong>Mã SP:</strong> {{ product.product_code }}</li>
-        <li class="list-group-item"><strong>Tên SP:</strong> {{ product.product_name }}</li>
-        <li class="list-group-item"><strong>Số Seri:</strong> {{ product.serial_number }}</li>
-        <li class="list-group-item">
-          <strong>Tình Trạng:</strong>
-          {% if product.status == 'chạy tốt' %}
-            <span class="badge bg-success">{{ product.status }}</span>
-          {% elif product.status == 'đang sửa' %}
-            <span class="badge bg-warning text-dark">{{ product.status }}</span>
-          {% else %}
-            <span class="badge bg-danger">{{ product.status }}</span>
-          {% endif %}
-        </li>
-      </ul>
-      <div class="text-center mt-3">
-        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-outline-info"><i class="fas fa-eye"></i> Xem Chi Tiết</a>
+
+      <!-- Card quét bằng cách nhập mã -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header">
+          <h5><i class="fas fa-keyboard me-2"></i>Nhập Mã QR Thủ Công</h5>
+        </div>
+        <div class="card-body">
+          <form method="post" id="qrForm" novalidate>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-keyboard"></i></span>
+              <input type="text" id="qr_content" name="qr_content" class="form-control" 
+                     placeholder="Nhập mã QR tại đây..." required>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search me-2"></i>Tìm Kiếm
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {% if product %}
+      <div class="card shadow-sm mb-4">
+        <div class="card-header">
+          <h5><i class="fas fa-search me-2"></i>Kết Quả Tìm Kiếm</h5>
+        </div>
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-md-3 text-center">
+              <img src="{{ url_for('get_qr', product_id=product.id) }}" alt="QR Code" class="img-fluid">
+            </div>
+            <div class="col-md-9">
+              <h5>{{ product.product_name }}</h5>
+              <p><strong>Mã SP:</strong> {{ product.product_code }}</p>
+              <p><strong>Số Seri:</strong> {{ product.serial_number }}</p>
+              <p><strong>Bộ Phận:</strong> {{ product.department }}</p>
+              <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-primary mt-2">
+                Xem Chi Tiết
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% elif error %}
+      <div class="card shadow-sm">
+        <div class="card-body text-center">
+          <i class="fas fa-exclamation-circle text-danger fa-3x mb-3"></i>
+          <h5 class="text-danger">Không Tìm Thấy</h5>
+          <p>{{ error }}</p>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Card hướng dẫn -->
+      <div class="card shadow-sm mt-4">
+        <div class="card-header">
+          <h5><i class="fas fa-info-circle me-2"></i>Hướng Dẫn Sử Dụng</h5>
+        </div>
+        <div class="card-body">
+          <ul class="list-unstyled">
+            <li><strong>Bước 1:</strong> Cho phép truy cập camera và đưa mã QR vào khung</li>
+            <li><strong>Bước 2:</strong> Hoặc nhập mã QR vào ô tìm kiếm</li>
+            <li><strong>Bước 3:</strong> Xem thông tin chi tiết sản phẩm</li>
+          </ul>
+        </div>
       </div>
     </div>
-    {% endif %}
   </div>
 </div>
+
+<!-- Thư viện quét QR -->
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+  // Khi quét thành công, tự động điền vào input và submit form
+  function onScanSuccess(decodedText, decodedResult) {
+    console.log("Mã QR quét được: ", decodedText);
+    document.getElementById("qr_content").value = decodedText;
+    document.getElementById("qrForm").submit();
+  }
+
+  function onScanFailure(error) {
+    // Xử lý lỗi (chưa quét được, hay camera bị tắt, v.v.)
+    // console.warn(`Mã QR chưa quét được: ${error}`);
+  }
+
+  // Khởi tạo html5-qrcode
+  let html5QrcodeScanner = new Html5QrcodeScanner(
+    "reader", 
+    {
+      fps: 10,           // số lần quét mỗi giây
+      qrbox: 250         // kích thước vùng quét
+    },
+    false               // verbose = false (không log chi tiết)
+  );
+  html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+</script>
 {% endblock %}

@@ -1,376 +1,271 @@
 {% extends 'base.html' %}
-{% block title %}Bảng Điều Khiển Quản Trị{% endblock %}
+{% block title %}Quản Trị Hệ Thống{% endblock %}
+{% block header_title %}<i class="fas fa-users-cog me-2"></i>Quản Trị Hệ Thống{% endblock %}
 {% block content %}
-<div class="card shadow-sm">
-  <div class="card-header bg-primary text-white">
-    <h4 class="mb-0">Quản Trị Hệ Thống</h4>
-  </div>
-  <div class="card-body">
-    <!-- Các Tab -->
-    <ul class="nav nav-tabs" id="adminTabs" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">
-          Chờ Phê Duyệt
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approved" type="button" role="tab">
-          Đã Phê Duyệt (User)
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="adminUsers-tab" data-bs-toggle="tab" data-bs-target="#adminUsers" type="button" role="tab">
-          Quản Trị (Manager & Admin)
-        </button>
-      </li>
-    </ul>
+<div class="container my-4">
+  <div class="card shadow-sm">
+    <div class="card-header">
+      <ul class="nav nav-tabs card-header-tabs" role="tablist">
+        <!-- Tab: Chờ Phê Duyệt -->
+        <li class="nav-item">
+          <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pending" type="button">
+            <i class="fas fa-user-clock me-2"></i>Chờ Phê Duyệt
+            {% if pending_users.total > 0 %}
+              <span class="badge bg-danger ms-2">{{ pending_users.total }}</span>
+            {% endif %}
+          </button>
+        </li>
+        <!-- Tab: Người Dùng -->
+        <li class="nav-item">
+          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#approved" type="button">
+            <i class="fas fa-users me-2"></i>Người Dùng
+          </button>
+        </li>
+        <!-- Tab: Quản Trị -->
+        <li class="nav-item">
+          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#adminUsers" type="button">
+            <i class="fas fa-user-shield me-2"></i>Quản Trị
+          </button>
+        </li>
+      </ul>
+    </div>
+    <div class="card-body p-0">
+      <div class="tab-content">
+        <!-- Tab: Chờ Phê Duyệt -->
+        <div class="tab-pane fade show active" id="pending">
+          <div class="p-4">
+            <h5>Danh Sách Chờ Phê Duyệt</h5>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Tên Đăng Nhập</th>
+                    <th>Họ Tên</th>
+                    <th>Mã Nhân Viên</th>
+                    <th class="text-center">Thao Tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for user in pending_users.items %}
+                  <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.full_name or '---' }}</td>
+                    <td>{{ user.employee_code or '---' }}</td>
+                    <td class="text-center">
+                      <form method="post" class="d-inline">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <input type="hidden" name="current_tab" value="#pending">
+                        <button type="submit" name="action" value="approve" class="btn btn-sm btn-icon" title="Phê duyệt">
+                          <i class="fas fa-check text-success"></i>
+                        </button>
+                        <button type="submit" name="action" value="delete" class="btn btn-sm btn-icon ms-1" title="Xóa" onclick="return confirm('Xóa tài khoản này?')">
+                          <i class="fas fa-trash text-danger"></i>
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% if pending_users.pages > 1 %}
+            <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-3">
+              <div>Hiển thị {{ pending_users.items|length }} / {{ pending_users.total }} tài khoản</div>
+              <nav>
+                <ul class="pagination mb-0">
+                  {% if pending_users.has_prev %}
+                  <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin_panel', pending_page=pending_users.prev_num) }}#pending">
+                      <i class="fas fa-chevron-left"></i>
+                    </a>
+                  </li>
+                  {% endif %}
+                  {% for page_num in pending_users.iter_pages() %}
+                    {% if page_num %}
+                      <li class="page-item {% if page_num == pending_users.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin_panel', pending_page=page_num) }}#pending">{{ page_num }}</a>
+                      </li>
+                    {% else %}
+                      <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                  {% endfor %}
+                  {% if pending_users.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin_panel', pending_page=pending_users.next_num) }}#pending">
+                      <i class="fas fa-chevron-right"></i>
+                    </a>
+                  </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            </div>
+            {% endif %}
+          </div>
+        </div>
 
-    <div class="tab-content mt-3" id="adminTabsContent">
-      <!-- Tab: Chờ Phê Duyệt -->
-      <div class="tab-pane fade show active" id="pending" role="tabpanel">
-        <div class="mb-3">
-          <input type="text" id="pendingSearch" class="form-control" placeholder="Tìm kiếm người dùng chờ phê duyệt...">
-        </div>
-        {% if pending_users.items|length > 0 %}
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead class="table-light">
-              <tr>
-                <th class="text-center">ID</th>
-                <th class="text-center">Tên Đăng Nhập</th>
-                <th class="text-center">Họ Tên</th>
-                <th class="text-center">Mã Nhân Viên</th>
-                <th class="text-center">Hành Động</th>
-              </tr>
-            </thead>
-            <tbody id="pendingTable">
-              {% for user in pending_users.items %}
-              <tr>
-                <td class="text-center">{{ user.id }}</td>
-                <td class="text-center">{{ user.username }}</td>
-                <td class="text-center">{{ user.full_name or '---' }}</td>
-                <td class="text-center">{{ user.employee_code or '---' }}</td>
-                <td class="text-center">
-                  <!-- Nút Phê Duyệt -->
-                  <form method="post" class="d-inline">
-                    <input type="hidden" name="user_id" value="{{ user.id }}">
-                    <input type="hidden" name="current_tab" value="#pending">
-                    <button type="submit" name="action" value="approve" class="btn btn-success btn-sm" title="Phê duyệt">
-                      <i class="fas fa-check"></i>
-                    </button>
-                  </form>
-                  <!-- Nút Xóa -->
-                  <form method="post" class="d-inline ms-1" onsubmit="return confirm('Xóa tài khoản này?');">
-                    <input type="hidden" name="user_id" value="{{ user.id }}">
-                    <input type="hidden" name="current_tab" value="#pending">
-                    <button type="submit" name="action" value="delete" class="btn btn-danger btn-sm" title="Xóa">
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  </form>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        <!-- Phân trang cho tab Pending -->
-        {% if pending_users.pages > 1 %}
-        <nav aria-label="Pending Pagination" class="mt-3">
-          <ul class="pagination justify-content-center">
-            {% if pending_users.has_prev %}
-              <li class="page-item">
-                <a class="page-link" href="{{ url_for('admin_panel', pending_page=pending_users.prev_num) }}#pending" aria-label="Previous">
-                  <span aria-hidden="true">&laquo;</span>
-                </a>
-              </li>
-            {% else %}
-              <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
-            {% endif %}
-            
-            {% for page_num in pending_users.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-              {% if page_num %}
-                {% if page_num == pending_users.page %}
-                  <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
-                {% else %}
-                  <li class="page-item"><a class="page-link" href="{{ url_for('admin_panel', pending_page=page_num) }}#pending">{{ page_num }}</a></li>
-                {% endif %}
-              {% else %}
-                <li class="page-item disabled"><span class="page-link">…</span></li>
-              {% endif %}
-            {% endfor %}
-            
-            {% if pending_users.has_next %}
-              <li class="page-item">
-                <a class="page-link" href="{{ url_for('admin_panel', pending_page=pending_users.next_num) }}#pending" aria-label="Next">
-                  <span aria-hidden="true">&raquo;</span>
-                </a>
-              </li>
-            {% else %}
-              <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
-            {% endif %}
-          </ul>
-        </nav>
-        {% endif %}
-        {% else %}
-          <div class="alert alert-info">Không có người dùng chờ phê duyệt.</div>
-        {% endif %}
-      </div>
-      
-      <!-- Tab: Đã Phê Duyệt (User) -->
-      <div class="tab-pane fade" id="approved" role="tabpanel">
-        <div class="mb-3">
-          <input type="text" id="approvedSearch" class="form-control" placeholder="Tìm kiếm người dùng đã phê duyệt...">
-        </div>
-        {% if approved_users.items|length > 0 %}
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead class="table-light">
-              <tr>
-                <th class="text-center">ID</th>
-                <th class="text-center">Tên Đăng Nhập</th>
-                <th class="text-center">Họ Tên</th>
-                <th class="text-center">Mã Nhân Viên</th>
-                <th class="text-center">Role</th>
-                <th class="text-center">Đã duyệt bởi</th>
-                <th class="text-center">Hành Động</th>
-              </tr>
-            </thead>
-            <tbody id="approvedTable">
-              {% for user in approved_users.items %}
-              <tr>
-                <td class="text-center">{{ user.id }}</td>
-                <td class="text-center">{{ user.username }}</td>
-                <td class="text-center">{{ user.full_name or '---' }}</td>
-                <td class="text-center">{{ user.employee_code or '---' }}</td>
-                <td class="text-center">{{ user.role }}</td>
-                <td class="text-center">
-                  {% if user.approved_by %}
-                    {% set approver = get_approver(user.approved_by) %}
-                    {{ approver.full_name or approver.username }} ({{ approver.employee_code or '---' }})
-                  {% else %}
-                    ---
+        <!-- Tab: Người Dùng -->
+        <div class="tab-pane fade" id="approved">
+          <div class="p-4">
+            <h5>Danh Sách Người Dùng</h5>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Tên Đăng Nhập</th>
+                    <th>Họ Tên</th>
+                    <th>Mã Nhân Viên</th>
+                    <th class="text-center">Thao Tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for user in approved_users.items %}
+                  <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.full_name or '---' }}</td>
+                    <td>{{ user.employee_code or '---' }}</td>
+                    <td class="text-center">
+                      <form method="post" class="d-inline">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <input type="hidden" name="current_tab" value="#approved">
+                        <!-- Chỉ admin mới cập nhật role -->
+                        <select name="new_role" class="form-select form-select-sm d-inline-block" style="width: auto;">
+                          <option value="user" {% if user.role == 'user' %}selected{% endif %}>User</option>
+                          <option value="manager" {% if user.role == 'manager' %}selected{% endif %}>Manager</option>
+                          <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                        </select>
+                        <button type="submit" name="action" value="update_role" class="btn btn-sm btn-icon ms-1" title="Cập nhật Role">
+                          <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button type="submit" name="action" value="delete" class="btn btn-sm btn-icon ms-1" title="Xóa" onclick="return confirm('Xóa tài khoản này?')">
+                          <i class="fas fa-trash text-danger"></i>
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% if approved_users.pages > 1 %}
+            <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-3">
+              <div>Hiển thị {{ approved_users.items|length }} / {{ approved_users.total }} tài khoản</div>
+              <nav>
+                <ul class="pagination mb-0">
+                  {% if approved_users.has_prev %}
+                  <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin_panel', approved_page=approved_users.prev_num) }}#approved">
+                      <i class="fas fa-chevron-left"></i>
+                    </a>
+                  </li>
                   {% endif %}
-                </td>
-                <td class="text-center">
-                  <form method="post" class="d-inline">
-                    <input type="hidden" name="user_id" value="{{ user.id }}">
-                    <input type="hidden" name="current_tab" value="#approved">
-                    <div class="btn-group">
-                      <button class="btn btn-sm btn-info dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        Thay Đổi Role
-                      </button>
-                      <ul class="dropdown-menu">
-                        <li>
-                          <button class="dropdown-item" type="submit" name="action" value="promote_manager">
-                            Nâng lên Manager
-                          </button>
-                        </li>
-                        <li>
-                          <button class="dropdown-item" type="submit" name="action" value="promote_admin">
-                            Nâng lên Admin
-                          </button>
-                        </li>
-                        <li>
-                          <button class="dropdown-item" type="submit" name="action" value="demote_user">
-                            Hạ xuống User
-                          </button>
-                        </li>
-                      </ul>
-                    </div>
-                  </form>
-                  <form method="post" class="d-inline ms-1" onsubmit="return confirm('Xóa tài khoản này?');">
-                    <input type="hidden" name="user_id" value="{{ user.id }}">
-                    <input type="hidden" name="current_tab" value="#approved">
-                    <button type="submit" name="action" value="delete" class="btn btn-danger btn-sm">
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  </form>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        <!-- Phân trang cho tab Approved -->
-        {% if approved_users.pages > 1 %}
-        <nav aria-label="Approved Pagination" class="mt-3">
-          <ul class="pagination justify-content-center">
-            {% if approved_users.has_prev %}
-              <li class="page-item">
-                <a class="page-link" href="{{ url_for('admin_panel', approved_page=approved_users.prev_num) }}#approved" aria-label="Previous">
-                  <span aria-hidden="true">&laquo;</span>
-                </a>
-              </li>
-            {% else %}
-              <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
-            {% endif %}
-            
-            {% for page_num in approved_users.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-              {% if page_num %}
-                {% if page_num == approved_users.page %}
-                  <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
-                {% else %}
-                  <li class="page-item"><a class="page-link" href="{{ url_for('admin_panel', approved_page=page_num) }}#approved">{{ page_num }}</a></li>
-                {% endif %}
-              {% else %}
-                <li class="page-item disabled"><span class="page-link">…</span></li>
-              {% endif %}
-            {% endfor %}
-            
-            {% if approved_users.has_next %}
-              <li class="page-item">
-                <a class="page-link" href="{{ url_for('admin_panel', approved_page=approved_users.next_num) }}#approved" aria-label="Next">
-                  <span aria-hidden="true">&raquo;</span>
-                </a>
-              </li>
-            {% else %}
-              <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
-            {% endif %}
-          </ul>
-        </nav>
-        {% endif %}
-        {% else %}
-          <div class="alert alert-info">Không có người dùng đã phê duyệt.</div>
-        {% endif %}
-      </div>
-      
-      <!-- Tab: Quản Trị (Manager & Admin) -->
-      <div class="tab-pane fade" id="adminUsers" role="tabpanel">
-        <div class="mb-3">
-          <input type="text" id="adminUsersSearch" class="form-control" placeholder="Tìm kiếm tài khoản quản trị...">
-        </div>
-        {% if admin_users.items|length > 0 %}
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead class="table-light">
-              <tr>
-                <th class="text-center">ID</th>
-                <th class="text-center">Tên Đăng Nhập</th>
-                <th class="text-center">Họ Tên</th>
-                <th class="text-center">Mã Nhân Viên</th>
-                <th class="text-center">Role</th>
-                <th class="text-center">Hành Động</th>
-              </tr>
-            </thead>
-            <tbody id="adminUsersTable">
-              {% for user in admin_users.items %}
-              <tr>
-                <td class="text-center">{{ user.id }}</td>
-                <td class="text-center">{{ user.username }}</td>
-                <td class="text-center">{{ user.full_name or '---' }}</td>
-                <td class="text-center">{{ user.employee_code or '---' }}</td>
-                <td class="text-center">{{ user.role }}</td>
-                <td class="text-center">
-                  {% if user.id != current_user.id %}
-                  <form method="post" class="d-inline">
-                    <input type="hidden" name="user_id" value="{{ user.id }}">
-                    <input type="hidden" name="current_tab" value="#adminUsers">
-                    <div class="btn-group">
-                      <button class="btn btn-sm btn-info dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        Thay Đổi Role
-                      </button>
-                      <ul class="dropdown-menu">
-                        {% if user.role == 'manager' %}
-                        <li>
-                          <button class="dropdown-item" type="submit" name="action" value="promote_admin">
-                            Nâng lên Admin
-                          </button>
-                        </li>
-                        <li>
-                          <button class="dropdown-item" type="submit" name="action" value="demote_user">
-                            Hạ xuống User
-                          </button>
-                        </li>
-                        {% elif user.role == 'admin' %}
-                        <li>
-                          <button class="dropdown-item" type="submit" name="action" value="demote_manager">
-                            Hạ xuống Manager
-                          </button>
-                        </li>
-                        <li>
-                          <button class="dropdown-item" type="submit" name="action" value="demote_user">
-                            Hạ xuống User
-                          </button>
-                        </li>
-                        {% endif %}
-                      </ul>
-                    </div>
-                  </form>
-                  <form method="post" class="d-inline ms-1" onsubmit="return confirm('Xóa tài khoản này?');">
-                    <input type="hidden" name="user_id" value="{{ user.id }}">
-                    <input type="hidden" name="current_tab" value="#adminUsers">
-                    <button type="submit" name="action" value="delete" class="btn btn-danger btn-sm">
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  </form>
-                  {% else %}
-                  <span class="text-muted">Không được xóa chính mình</span>
+                  {% for page_num in approved_users.iter_pages() %}
+                    {% if page_num %}
+                      <li class="page-item {% if page_num == approved_users.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin_panel', approved_page=page_num) }}#approved">{{ page_num }}</a>
+                      </li>
+                    {% else %}
+                      <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                  {% endfor %}
+                  {% if approved_users.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin_panel', approved_page=approved_users.next_num) }}#approved">
+                      <i class="fas fa-chevron-right"></i>
+                    </a>
+                  </li>
                   {% endif %}
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+                </ul>
+              </nav>
+            </div>
+            {% endif %}
+          </div>
         </div>
-        <!-- Phân trang cho tab Admin Users -->
-        {% if admin_users.pages > 1 %}
-        <nav aria-label="Admin Users Pagination" class="mt-3">
-          <ul class="pagination justify-content-center">
-            {% if admin_users.has_prev %}
-              <li class="page-item">
-                <a class="page-link" href="{{ url_for('admin_panel', admin_users_page=admin_users.prev_num) }}#adminUsers" aria-label="Previous">
-                  <span aria-hidden="true">&laquo;</span>
-                </a>
-              </li>
-            {% else %}
-              <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+
+        <!-- Tab: Quản Trị -->
+        <div class="tab-pane fade" id="adminUsers">
+          <div class="p-4">
+            <h5>Danh Sách Quản Trị</h5>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Tên Đăng Nhập</th>
+                    <th>Họ Tên</th>
+                    <th>Mã Nhân Viên</th>
+                    <th class="text-center">Thao Tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for user in admin_users.items %}
+                  <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.full_name or '---' }}</td>
+                    <td>{{ user.employee_code or '---' }}</td>
+                    <td class="text-center">
+                      <form method="post" class="d-inline">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <input type="hidden" name="current_tab" value="#adminUsers">
+                        <!-- Dropdown cập nhật role (chỉ admin có hiệu lực) -->
+                        <select name="new_role" class="form-select form-select-sm d-inline-block" style="width: auto;">
+                          <option value="manager" {% if user.role == 'manager' %}selected{% endif %}>Manager</option>
+                          <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                          <option value="user" {% if user.role == 'user' %}selected{% endif %}>User</option>
+                        </select>
+                        <button type="submit" name="action" value="update_role" class="btn btn-sm btn-icon ms-1" title="Cập nhật Role">
+                          <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button type="submit" name="action" value="delete" class="btn btn-sm btn-icon ms-1" title="Xóa" onclick="return confirm('Xóa tài khoản này?')">
+                          <i class="fas fa-trash text-danger"></i>
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% if admin_users.pages > 1 %}
+            <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-3">
+              <div>Hiển thị {{ admin_users.items|length }} / {{ admin_users.total }} quản trị</div>
+              <nav>
+                <ul class="pagination mb-0">
+                  {% if admin_users.has_prev %}
+                  <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin_panel', admin_users_page=admin_users.prev_num) }}#adminUsers">
+                      <i class="fas fa-chevron-left"></i>
+                    </a>
+                  </li>
+                  {% endif %}
+                  {% for page_num in admin_users.iter_pages() %}
+                    {% if page_num %}
+                      <li class="page-item {% if page_num == admin_users.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin_panel', admin_users_page=page_num) }}#adminUsers">{{ page_num }}</a>
+                      </li>
+                    {% else %}
+                      <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                  {% endfor %}
+                  {% if admin_users.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin_panel', admin_users_page=admin_users.next_num) }}#adminUsers">
+                      <i class="fas fa-chevron-right"></i>
+                    </a>
+                  </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            </div>
             {% endif %}
-            
-            {% for page_num in admin_users.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-              {% if page_num %}
-                {% if page_num == admin_users.page %}
-                  <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
-                {% else %}
-                  <li class="page-item"><a class="page-link" href="{{ url_for('admin_panel', admin_users_page=page_num) }}#adminUsers">{{ page_num }}</a></li>
-                {% endif %}
-              {% else %}
-                <li class="page-item disabled"><span class="page-link">…</span></li>
-              {% endif %}
-            {% endfor %}
-            
-            {% if admin_users.has_next %}
-              <li class="page-item">
-                <a class="page-link" href="{{ url_for('admin_panel', admin_users_page=admin_users.next_num) }}#adminUsers" aria-label="Next">
-                  <span aria-hidden="true">&raquo;</span>
-                </a>
-              </li>
-            {% else %}
-              <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
-            {% endif %}
-          </ul>
-        </nav>
-        {% endif %}
-        {% else %}
-          <div class="alert alert-info">Không có tài khoản quản trị.</div>
-        {% endif %}
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
-
-<!-- JavaScript tìm kiếm cho các bảng trong Admin -->
-<script>
-  function setupTableFilter(inputId, tableId) {
-    document.getElementById(inputId).addEventListener("keyup", function() {
-      const filter = this.value.toLowerCase();
-      const rows = document.querySelectorAll("#" + tableId + " tr");
-      rows.forEach(row => {
-        row.style.display = row.textContent.toLowerCase().includes(filter) ? "" : "none";
-      });
-    });
-  }
-  setupTableFilter("pendingSearch", "pendingTable");
-  setupTableFilter("approvedSearch", "approvedTable");
-  setupTableFilter("adminUsersSearch", "adminUsersTable");
-</script>
 {% endblock %}

@@ -1,46 +1,90 @@
 {% extends 'base.html' %}
 {% block title %}Chi Tiết Sản Phẩm{% endblock %}
+{% block header_title %}Chi Tiết Sản Phẩm{% endblock %}
 {% block content %}
-<div class="card shadow-sm">
-  <div class="card-header bg-primary text-white text-center">
-    <h4>Chi Tiết Sản Phẩm</h4>
-  </div>
-  <div class="card-body">
-    <div class="row">
-      <div class="col-md-6">
-        <ul class="list-group list-group-flush">
-          <li class="list-group-item"><strong>Ngày Nhập:</strong> {{ product.date_entry.strftime("%d/%m/%Y %H:%M") }}</li>
-          <li class="list-group-item"><strong>Mã SP:</strong> {{ product.product_code }}</li>
-          <li class="list-group-item"><strong>Tên SP:</strong> {{ product.product_name }}</li>
-          <li class="list-group-item"><strong>Số Seri:</strong> {{ product.serial_number }}</li>
-        </ul>
-      </div>
-      <div class="col-md-6">
-        <ul class="list-group list-group-flush">
-          <li class="list-group-item"><strong>Ngày Cấp:</strong> {{ product.date_issue.strftime("%d/%m/%Y") }}</li>
-          <li class="list-group-item"><strong>Bộ Phận:</strong> {{ product.department }}</li>
-          <li class="list-group-item">
-            <strong>Tình Trạng:</strong>
+<div class="container my-4">
+  <div class="row">
+    <!-- Thông tin sản phẩm -->
+    <div class="col-lg-8">
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <div>
+            <span class="fw-bold text-primary">{{ product.product_code }}</span>
+            <h5 class="d-inline ms-2">{{ product.product_name }}</h5>
+          </div>
+          <div>
             {% if product.status == 'chạy tốt' %}
-              <span class="badge bg-success">{{ product.status }}</span>
+              <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Hoạt Động Tốt</span>
             {% elif product.status == 'đang sửa' %}
-              <span class="badge bg-warning text-dark">{{ product.status }}</span>
+              <span class="badge bg-warning"><i class="fas fa-tools me-1"></i>Đang Sửa Chữa</span>
             {% else %}
-              <span class="badge bg-danger">{{ product.status }}</span>
+              <span class="badge bg-danger"><i class="fas fa-exclamation-circle me-1"></i>Đang Hỏng</span>
             {% endif %}
-          </li>
-          <li class="list-group-item text-center">
-            <img src="{{ url_for('get_qr', product_id=product.id) }}" alt="QR Code" class="img-fluid" style="max-width:180px;">
-          </li>
-          <li class="list-group-item"><strong>Người Nhập:</strong> {% if product.entered_by_user and product.entered_by_user.full_name %} {{ product.entered_by_user.full_name }} {% else %} <em>---</em> {% endif %}</li>
-        </ul>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <strong>Ngày Nhập:</strong> {{ product.date_entry.strftime("%d/%m/%Y %H:%M") }}
+            </div>
+            <div class="col-md-6">
+              <strong>Số Seri:</strong> {{ product.serial_number }}
+            </div>
+            <div class="col-md-6">
+              <strong>Ngày Cấp:</strong> {{ product.date_issue.strftime("%d/%m/%Y") }}
+            </div>
+            <div class="col-md-6">
+              <strong>Bộ Phận:</strong> {{ product.department }}
+            </div>
+            <div class="col-md-6">
+              <strong>Người Nhập:</strong> {% if product.entered_by_user %}{{ product.entered_by_user.full_name }}{% else %}---{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Mã QR và thao tác nhanh -->
+    <div class="col-lg-4">
+      <div class="card mb-4 text-center">
+        <div class="card-header">
+          <h5>Mã QR</h5>
+        </div>
+        <div class="card-body">
+          <img src="{{ url_for('get_qr', product_id=product.id) }}" alt="QR Code" class="img-fluid mb-3" style="max-width:200px;">
+          <div class="d-grid gap-2">
+            <a href="{{ url_for('print_product', product_id=product.id) }}" class="btn btn-outline-primary">In Mã QR</a>
+            <a href="{{ url_for('get_qr', product_id=product.id) }}" download="qr_{{ product.product_code }}.png" class="btn btn-outline-success">Tải Mã QR</a>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body text-center">
+          {% if current_user.is_authenticated and current_user.role in ['manager', 'admin'] %}
+          <a href="{{ url_for('edit_product', product_id=product.id) }}" class="btn btn-warning w-100 mb-2">Chỉnh Sửa</a>
+          <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#deleteModal">Xóa Sản Phẩm</button>
+          {% endif %}
+          <a href="{{ url_for('index') }}" class="btn btn-light w-100 mt-2">Quay Lại</a>
+        </div>
       </div>
     </div>
   </div>
-  <div class="card-footer text-center">
-    <a href="{{ url_for('print_product', product_id=product.id) }}" class="btn btn-secondary me-2"><i class="fas fa-print"></i> In Mã SP</a>
-    <a href="{{ url_for('get_qr', product_id=product.id) }}" download="qr_{{ product.product_code }}.png" class="btn btn-success me-2"><i class="fas fa-download"></i> Tải QR</a>
-    <a href="{{ url_for('index') }}" class="btn btn-primary"><i class="fas fa-arrow-left"></i> Quay Lại</a>
+</div>
+<!-- Modal xác nhận xóa sản phẩm -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-danger">Xác Nhận Xóa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        Bạn có chắc muốn xóa sản phẩm này không?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="btn btn-danger">Xóa</button>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}

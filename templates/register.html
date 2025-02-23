@@ -1,56 +1,55 @@
 {% extends 'base.html' %}
 {% block title %}Đăng Ký - Quản Lý Sản Phẩm{% endblock %}
+{% block header_title %}Đăng Ký Tài Khoản{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-lg-5 col-md-7">
-    <div class="card shadow-sm">
-      <div class="card-header bg-primary text-white text-center">
-        <h4 class="mb-0">Đăng Ký Tài Khoản</h4>
-      </div>
-      <div class="card-body">
-        <form method="post" onsubmit="return checkPasswordMatch();">
-          <div class="mb-3">
-            <label for="username" class="form-label">Tên Đăng Nhập</label>
-            <input type="text" id="username" name="username" class="form-control" placeholder="Chọn tên đăng nhập" required minlength="4" maxlength="20">
-            <div class="form-text">Từ 4-20 ký tự.</div>
-          </div>
-          <div class="mb-3">
-            <label for="password" class="form-label">Mật Khẩu</label>
-            <input type="password" id="password" name="password" class="form-control" placeholder="Tạo mật khẩu" required minlength="8">
-            <div class="form-text">Tối thiểu 8 ký tự, bao gồm chữ hoa, thường, số & ký tự đặc biệt.</div>
-          </div>
-          <div class="mb-3">
-            <label for="confirm_password" class="form-label">Xác Nhận Mật Khẩu</label>
-            <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Nhập lại mật khẩu" required minlength="8">
-          </div>
-          <div class="mb-3">
-            <label for="full_name" class="form-label">Họ Tên</label>
-            <input type="text" id="full_name" name="full_name" class="form-control" placeholder="Nhập họ tên của bạn" required>
-          </div>
-          <div class="mb-3">
-            <label for="employee_code" class="form-label">Mã Nhân Viên</label>
-            <input type="text" id="employee_code" name="employee_code" class="form-control" placeholder="Nhập mã nhân viên của bạn" required>
-          </div>
-          <button type="submit" class="btn btn-primary w-100">
-            <i class="fas fa-user-plus"></i> Đăng Ký
-          </button>
-        </form>
-      </div>
-      <div class="card-footer text-center">
-        <small>Đã có tài khoản? <a href="{{ url_for('login') }}">Đăng Nhập Ngay</a></small>
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="card shadow-sm my-5">
+        <div class="card-body p-4">
+          <h3 class="text-center mb-4">Tạo Tài Khoản Mới</h3>
+          <form method="post" novalidate>
+            <!-- Thông tin tài khoản -->
+            <div class="mb-3">
+              <label class="form-label">Tên Đăng Nhập</label>
+              <input type="text" class="form-control" name="username" placeholder="Nhập tên đăng nhập" required minlength="4" maxlength="20">
+              <small class="form-text text-muted">4-20 ký tự</small>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Mật Khẩu</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                <input type="password" class="form-control" name="password" id="password" placeholder="Tạo mật khẩu" required minlength="8">
+                <button class="btn btn-outline-secondary" type="button" id="togglePassword"><i class="fas fa-eye"></i></button>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Xác Nhận Mật Khẩu</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                <input type="password" class="form-control" name="confirm_password" id="confirm_password" placeholder="Nhập lại mật khẩu" required>
+                <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword"><i class="fas fa-eye"></i></button>
+              </div>
+            </div>
+            <!-- Thông tin cá nhân -->
+            <div class="mb-3">
+              <label class="form-label">Họ Tên</label>
+              <input type="text" class="form-control" name="full_name" placeholder="Nhập họ tên đầy đủ" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Mã Nhân Viên</label>
+              <input type="text" class="form-control" name="employee_code" placeholder="Nhập mã nhân viên" required>
+            </div>
+            <div class="d-grid mb-3">
+              <button type="submit" class="btn btn-primary">Đăng Ký</button>
+            </div>
+            <div class="text-center">
+              Đã có tài khoản? <a href="{{ url_for('login') }}">Đăng Nhập Ngay</a>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   </div>
 </div>
-<script>
-  function checkPasswordMatch() {
-    var pwd = document.getElementById("password").value;
-    var cpwd = document.getElementById("confirm_password").value;
-    if (pwd !== cpwd) {
-      alert("Mật khẩu không khớp!");
-      return false;
-    }
-    return true;
-  }
-</script>
 {% endblock %}
