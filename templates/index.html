@@ -1,12 +1,21 @@
 {% extends 'base.html' %}
 {% block title %}Trang Chủ - Quản Lý Sản Phẩm{% endblock %}
-{% block header_title %}Tổng Quan Hệ Thống{% endblock %}
-{% block content %}
+{% block header_title %}<i class="fas fa-layer-group me-2"></i>Quản Lý Sản Phẩm{% endblock %}
 
+{% block extra_head %}
+<style>
+  .filter-menu {
+    transition: max-height 0.3s ease;
+    overflow: hidden;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
 <div class="container-fluid">
   <!-- Ô thống kê -->
   <div class="row g-4 mb-4">
-    <div class="col-md-3">
+    <div class="col-md-3 col-sm-6">
       <div class="card stat-card">
         <div class="card-body d-flex align-items-center">
           <div class="stat-icon">
@@ -19,10 +28,10 @@
         </div>
       </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-3 col-sm-6">
       <div class="card stat-card">
         <div class="card-body d-flex align-items-center">
-          <div class="stat-icon bg-success bg-opacity-10">
+          <div class="stat-icon bg-success">
             <i class="fas fa-check-circle"></i>
           </div>
           <div class="ms-3">
@@ -32,10 +41,10 @@
         </div>
       </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-3 col-sm-6">
       <div class="card stat-card">
         <div class="card-body d-flex align-items-center">
-          <div class="stat-icon bg-warning bg-opacity-10">
+          <div class="stat-icon bg-warning">
             <i class="fas fa-tools"></i>
           </div>
           <div class="ms-3">
@@ -45,10 +54,10 @@
         </div>
       </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-3 col-sm-6">
       <div class="card stat-card">
         <div class="card-body d-flex align-items-center">
-          <div class="stat-icon bg-danger bg-opacity-10">
+          <div class="stat-icon bg-danger">
             <i class="fas fa-exclamation-circle"></i>
           </div>
           <div class="ms-3">
@@ -61,97 +70,131 @@
   </div>
 
   <!-- Danh sách sản phẩm -->
-  <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <h5><i class="fas fa-list-ul me-2"></i>Danh Sách Sản Phẩm</h5>
-      <!-- Form tìm kiếm và lọc tự động submit -->
-      <form class="d-flex align-items-center gap-2" method="get" action="{{ url_for('index') }}">
-        <!-- Input tìm kiếm -->
-        <div class="input-group">
-          <span class="input-group-text bg-white border-end-0">
-            <i class="fas fa-search"></i>
-          </span>
-          <input type="text"
-                 name="search"
-                 class="form-control border-start-0"
-                 placeholder="Tìm kiếm..."
-                 value="{{ search }}"
-                 oninput="debounceSubmit(this.form)" 
-          >
-        </div>
-        <!-- Dropdown lọc tình trạng -->
-        <select name="status" class="form-select" onchange="this.form.submit()">
-          <option value="">Tất cả</option>
-          <option value="chạy tốt" {% if status_filter == 'chạy tốt' %}selected{% endif %}>Hoạt Động Tốt</option>
-          <option value="đang sửa" {% if status_filter == 'đang sửa' %}selected{% endif %}>Đang Sửa Chữa</option>
-          <option value="hỏng" {% if status_filter == 'hỏng' %}selected{% endif %}>Đang Hỏng</option>
-        </select>
-        <!-- Nút Thêm Mới (nếu user có quyền) -->
+  <div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <h5 class="mb-0"><i class="fas fa-list-ul me-2"></i>Danh Sách Sản Phẩm</h5>
+      
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-outline-secondary" type="button" id="toggleFilters">
+          <i class="fas fa-filter me-2"></i>Bộ lọc
+        </button>
+        
         {% if current_user.is_authenticated and current_user.role in ['manager', 'admin'] %}
-          <a href="{{ url_for('add_product') }}" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i>Thêm Mới
-          </a>
+        <a href="{{ url_for('add_product') }}" class="btn btn-primary">
+          <i class="fas fa-plus me-2"></i>Thêm Mới
+        </a>
         {% endif %}
+      </div>
+    </div>
+    
+    <!-- Bộ lọc và tìm kiếm -->
+    <div class="card-body filter-menu" id="filterMenu" style="max-height: 0px; padding: 0;">
+      <form method="get" action="{{ url_for('index') }}" id="filterForm">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Tìm kiếm</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-search"></i></span>
+              <input type="text" name="search" class="form-control" placeholder="Mã, tên hoặc số seri..." value="{{ search }}">
+            </div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Tình trạng</label>
+            <select name="status" class="form-select">
+              <option value="">Tất cả tình trạng</option>
+              <option value="chạy tốt" {% if status_filter == 'chạy tốt' %}selected{% endif %}>Hoạt Động Tốt</option>
+              <option value="đang sửa" {% if status_filter == 'đang sửa' %}selected{% endif %}>Đang Sửa Chữa</option>
+              <option value="hỏng" {% if status_filter == 'hỏng' %}selected{% endif %}>Đang Hỏng</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Bộ phận</label>
+            <select name="department" class="form-select">
+              <option value="">Tất cả bộ phận</option>
+              {% for dept in departments %}
+              <option value="{{ dept }}" {% if department_filter == dept %}selected{% endif %}>{{ dept }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <div class="d-grid w-100">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-filter me-2"></i>Lọc
+              </button>
+            </div>
+          </div>
+        </div>
       </form>
     </div>
 
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover mb-0">
-          <thead>
-            <tr>
-              <th>NGÀY NHẬP</th>
-              <th>MÃ SP</th>
-              <th>TÊN SẢN PHẨM</th>
-              <th>SỐ SERI</th>
-              <th>BỘ PHẬN</th>
-              <th class="text-center">TRẠNG THÁI</th>
-              <th class="text-center">THAO TÁC</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for product in products.items %}
-            <tr>
-              <td>{{ product.date_entry.strftime("%d/%m/%Y %H:%M") }}</td>
-              <td><span class="text-primary">{{ product.product_code }}</span></td>
-              <td>{{ product.product_name }}</td>
-              <td>{{ product.serial_number }}</td>
-              <td>{{ product.department }}</td>
-              <td class="text-center">
-                {% if product.status == 'chạy tốt' %}
-                  <span class="badge bg-success">
-                    <i class="fas fa-check-circle me-1"></i>Hoạt Động Tốt
-                  </span>
-                {% elif product.status == 'đang sửa' %}
-                  <span class="badge bg-warning">
-                    <i class="fas fa-tools me-1"></i>Đang Sửa Chữa
-                  </span>
-                {% else %}
-                  <span class="badge bg-danger">
-                    <i class="fas fa-exclamation-circle me-1"></i>Đang Hỏng
-                  </span>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>MÃ SP</th>
+            <th>TÊN SẢN PHẨM</th>
+            <th>SỐ SERI</th>
+            <th>BỘ PHẬN</th>
+            <th>NGÀY CẤP</th>
+            <th class="text-center">TRẠNG THÁI</th>
+            <th class="text-center">THAO TÁC</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products.items %}
+          <tr>
+            <td><span class="text-primary fw-medium">{{ product.product_code }}</span></td>
+            <td>{{ product.product_name }}</td>
+            <td>{{ product.serial_number }}</td>
+            <td>{{ product.department }}</td>
+            <td>{{ product.date_issue.strftime("%d/%m/%Y") }}</td>
+            <td class="text-center">
+              {% if product.status == 'chạy tốt' %}
+                <span class="badge bg-success">
+                  <i class="fas fa-check-circle me-1"></i>Hoạt Động Tốt
+                </span>
+              {% elif product.status == 'đang sửa' %}
+                <span class="badge bg-warning">
+                  <i class="fas fa-tools me-1"></i>Đang Sửa Chữa
+                </span>
+              {% else %}
+                <span class="badge bg-danger">
+                  <i class="fas fa-exclamation-circle me-1"></i>Đang Hỏng
+                </span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              <div class="btn-group">
+                <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-sm btn-outline-primary" title="Xem chi tiết">
+                  <i class="fas fa-eye"></i>
+                </a>
+                {% if current_user.is_authenticated and current_user.role in ['manager', 'admin'] %}
+                <a href="{{ url_for('edit_product', product_id=product.id) }}" class="btn btn-sm btn-outline-warning" title="Chỉnh sửa">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <button type="button" class="btn btn-sm btn-outline-danger" title="Xóa" 
+                        onclick="confirmDelete({{ product.id }}, '{{ product.product_name }}')">
+                  <i class="fas fa-trash"></i>
+                </button>
                 {% endif %}
-              </td>
-              <td class="text-center">
-                <div class="btn-group">
-                  <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-sm btn-icon" title="Xem chi tiết">
-                    <i class="fas fa-eye"></i>
-                  </a>
-                  {% if current_user.is_authenticated and current_user.role in ['manager', 'admin'] %}
-                    <a href="{{ url_for('edit_product', product_id=product.id) }}" class="btn btn-sm btn-icon" title="Chỉnh sửa">
-                      <i class="fas fa-edit"></i>
-                    </a>
-                    <button type="button" class="btn btn-sm btn-icon" title="Xóa" onclick="deleteProduct('{{ product.id }}')">
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  {% endif %}
-                </div>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7" class="text-center py-4">
+              <div class="text-muted">
+                <i class="fas fa-inbox fa-3x mb-3"></i>
+                <p>Không tìm thấy sản phẩm nào</p>
+                {% if search or status_filter or department_filter %}
+                <a href="{{ url_for('index') }}" class="btn btn-sm btn-outline-primary mt-2">Xóa bộ lọc</a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
 
     <!-- Phân trang -->
@@ -163,16 +206,17 @@
           {% if products.has_prev %}
           <li class="page-item">
             <a class="page-link" 
-               href="{{ url_for('index', page=products.prev_num, search=search, status=status_filter) }}">
+               href="{{ url_for('index', page=products.prev_num, search=search, status=status_filter, department=department_filter) }}">
               <i class="fas fa-chevron-left"></i>
             </a>
           </li>
           {% endif %}
-          {% for page_num in products.iter_pages() %}
+          
+          {% for page_num in products.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
             {% if page_num %}
               <li class="page-item {% if page_num == products.page %}active{% endif %}">
                 <a class="page-link" 
-                   href="{{ url_for('index', page=page_num, search=search, status=status_filter) }}">
+                   href="{{ url_for('index', page=page_num, search=search, status=status_filter, department=department_filter) }}">
                   {{ page_num }}
                 </a>
               </li>
@@ -180,10 +224,11 @@
               <li class="page-item disabled"><span class="page-link">...</span></li>
             {% endif %}
           {% endfor %}
+          
           {% if products.has_next %}
           <li class="page-item">
             <a class="page-link" 
-               href="{{ url_for('index', page=products.next_num, search=search, status=status_filter) }}">
+               href="{{ url_for('index', page=products.next_num, search=search, status=status_filter, department=department_filter) }}">
               <i class="fas fa-chevron-right"></i>
             </a>
           </li>
@@ -195,23 +240,64 @@
   </div>
 </div>
 
-<!-- Debounce function để tránh submit quá nhiều khi gõ -->
+<!-- Modal Xác nhận xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Xác Nhận Xóa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Bạn có chắc chắn muốn xóa sản phẩm <strong id="deleteProductName"></strong>?</p>
+        <p class="text-danger"><small>Thao tác này không thể hoàn tác.</small></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+        <form id="deleteForm" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-danger">Xóa</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_script %}
 <script>
-  let debounceTimer;
-  function debounceSubmit(form) {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-      form.submit();
-    }, 300);
-  }
+  // Toggle bộ lọc
+  const filterMenu = document.getElementById('filterMenu');
+  const toggleFilters = document.getElementById('toggleFilters');
   
-  // Ví dụ hàm xóa sản phẩm (bạn cần hiện thực lại logic xóa trong backend)
-  function deleteProduct(productId) {
-    if (confirm("Bạn chắc chắn muốn xóa sản phẩm ID: " + productId + " ?")) {
-      // Ví dụ: chuyển hướng sang route xóa (bạn cần cài đặt route xóa)
-      window.location.href = "/delete_product/" + productId;
+  toggleFilters.addEventListener('click', function() {
+    if (filterMenu.style.maxHeight === '0px') {
+      filterMenu.style.maxHeight = '200px';
+      filterMenu.style.padding = '1.25rem';
+      toggleFilters.innerHTML = '<i class="fas fa-times me-2"></i>Đóng';
+    } else {
+      filterMenu.style.maxHeight = '0px';
+      filterMenu.style.padding = '0';
+      toggleFilters.innerHTML = '<i class="fas fa-filter me-2"></i>Bộ lọc';
     }
+  });
+  
+  // Hiển thị bộ lọc nếu đã có tìm kiếm hoặc lọc
+  {% if search or status_filter or department_filter %}
+  document.addEventListener('DOMContentLoaded', function() {
+    filterMenu.style.maxHeight = '200px';
+    filterMenu.style.padding = '1.25rem';
+    toggleFilters.innerHTML = '<i class="fas fa-times me-2"></i>Đóng';
+  });
+  {% endif %}
+  
+  // Xử lý xóa sản phẩm
+  function confirmDelete(productId, productName) {
+    document.getElementById('deleteProductName').textContent = productName;
+    document.getElementById('deleteForm').action = "/delete_product/" + productId;
+    
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    deleteModal.show();
   }
 </script>
-
 {% endblock %}

@@ -1,0 +1,342 @@
+{% extends 'base.html' %}
+{% block title %}Thống Kê Hệ Thống{% endblock %}
+{% block header_title %}<i class="fas fa-chart-line me-2"></i>Thống Kê Hệ Thống{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@4.0.0/dist/chart.min.css">
+<style>
+  .card-stats {
+    border-radius: 0.5rem;
+    transition: transform 0.3s ease;
+  }
+  .card-stats:hover {
+    transform: translateY(-5px);
+  }
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0;
+  }
+  .stat-label {
+    color: #6B7280;
+    font-size: 0.875rem;
+    margin-bottom: 0;
+  }
+  .stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    background-color: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+  }
+  .chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Thống kê tổng quan -->
+  <div class="row g-4 mb-4">
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats h-100">
+        <div class="card-body d-flex align-items-center p-4">
+          <div class="stat-icon">
+            <i class="fas fa-cube"></i>
+          </div>
+          <div class="ms-3">
+            <p class="stat-value">{{ total_products }}</p>
+            <p class="stat-label">Tổng sản phẩm</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats h-100">
+        <div class="card-body d-flex align-items-center p-4">
+          <div class="stat-icon" style="background-color: rgba(16, 185, 129, 0.1); color: #10B981;">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="ms-3">
+            <p class="stat-value">{{ running_count }}</p>
+            <p class="stat-label">Đang hoạt động</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats h-100">
+        <div class="card-body d-flex align-items-center p-4">
+          <div class="stat-icon" style="background-color: rgba(245, 158, 11, 0.1); color: #F59E0B;">
+            <i class="fas fa-tools"></i>
+          </div>
+          <div class="ms-3">
+            <p class="stat-value">{{ repairing_count }}</p>
+            <p class="stat-label">Đang sửa chữa</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats h-100">
+        <div class="card-body d-flex align-items-center p-4">
+          <div class="stat-icon" style="background-color: rgba(239, 68, 68, 0.1); color: #EF4444;">
+            <i class="fas fa-exclamation-circle"></i>
+          </div>
+          <div class="ms-3">
+            <p class="stat-value">{{ broken_count }}</p>
+            <p class="stat-label">Đang hỏng</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Biểu đồ và dữ liệu phân tích -->
+  <div class="row">
+    <!-- Biểu đồ phân bố theo bộ phận -->
+    <div class="col-lg-6">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Phân Bố Theo Bộ Phận</h5>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas id="departmentChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Biểu đồ tình trạng sản phẩm -->
+    <div class="col-lg-6">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Tình Trạng Sản Phẩm</h5>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas id="statusChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Biểu đồ sản phẩm theo tháng -->
+    <div class="col-lg-8">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Sản Phẩm Theo Tháng</h5>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas id="monthlyChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Thông tin người dùng -->
+    <div class="col-lg-4">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-users me-2"></i>Người Dùng Hệ Thống</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-4">
+            <h6>Thống kê người dùng</h6>
+            <div class="row g-3 mt-2">
+              <div class="col-6">
+                <div class="card bg-light">
+                  <div class="card-body text-center py-3">
+                    <p class="text-muted mb-1">Người dùng mới</p>
+                    <h3 class="mb-0">{{ new_users }}</h3>
+                    <small class="text-muted">Tháng này</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="card bg-light">
+                  <div class="card-body text-center py-3">
+                    <p class="text-muted mb-1">Hoạt động</p>
+                    <h3 class="mb-0">{{ active_users }}</h3>
+                    <small class="text-muted">24h qua</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <hr>
+          
+          <div>
+            <h6>Phân bố theo vai trò</h6>
+            <div class="chart-container" style="height: 180px;">
+              <canvas id="userRoleChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_script %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.0.0/dist/chart.umd.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Dữ liệu biểu đồ bộ phận
+    const departmentLabels = [];
+    const departmentData = [];
+    
+    {% for dept in departments %}
+      departmentLabels.push('{{ dept[0] }}');
+      departmentData.push({{ dept[1] }});
+    {% endfor %}
+    
+    // Dữ liệu biểu đồ tình trạng
+    const statusData = [
+      {{ running_count }},
+      {{ repairing_count }},
+      {{ broken_count }}
+    ];
+    
+    // Dữ liệu biểu đồ theo tháng
+    const monthlyLabels = [];
+    const monthlyData = [];
+    
+    {% for month in monthly_data %}
+      monthlyLabels.push('{{ month[0] }}');
+      monthlyData.push({{ month[1] }});
+    {% endfor %}
+    
+    // Biểu đồ phân bố theo bộ phận
+    new Chart(document.getElementById('departmentChart'), {
+      type: 'pie',
+      data: {
+        labels: departmentLabels,
+        datasets: [{
+          data: departmentData,
+          backgroundColor: [
+            '#2563EB', '#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE',
+            '#1D4ED8', '#2563EB', '#3B82F6', '#60A5FA', '#93C5FD'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right'
+          }
+        }
+      }
+    });
+    
+    // Biểu đồ tình trạng sản phẩm
+    new Chart(document.getElementById('statusChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Hoạt Động Tốt', 'Đang Sửa Chữa', 'Đang Hỏng'],
+        datasets: [{
+          data: statusData,
+          backgroundColor: ['#10B981', '#F59E0B', '#EF4444'],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right'
+          }
+        }
+      }
+    });
+    
+    // Biểu đồ sản phẩm theo tháng
+    new Chart(document.getElementById('monthlyChart'), {
+      type: 'line',
+      data: {
+        labels: monthlyLabels,
+        datasets: [{
+          label: 'Số lượng sản phẩm',
+          data: monthlyData,
+          borderColor: '#2563EB',
+          backgroundColor: 'rgba(37, 99, 235, 0.2)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            grid: {
+              display: false
+            }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0
+            }
+          }
+        }
+      }
+    });
+    
+    // Biểu đồ vai trò người dùng
+    new Chart(document.getElementById('userRoleChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Admin', 'Manager', 'User'],
+        datasets: [{
+          label: 'Số lượng',
+          data: [
+            {{ admin_users.total if admin_users else 1 }},
+            {{ manager_users.total if manager_users else 0 }},
+            {{ approved_users.total if approved_users else 0 }}
+          ],
+          backgroundColor: ['#EF4444', '#F59E0B', '#10B981']
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            grid: {
+              display: false
+            }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: false
+          }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}

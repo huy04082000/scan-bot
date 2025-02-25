@@ -1,14 +1,16 @@
 {% extends 'base.html' %}
 {% block title %}Quản Trị Hệ Thống{% endblock %}
 {% block header_title %}<i class="fas fa-users-cog me-2"></i>Quản Trị Hệ Thống{% endblock %}
+
 {% block content %}
-<div class="container my-4">
+<div class="container-fluid my-4">
   <div class="card shadow-sm">
     <div class="card-header">
       <ul class="nav nav-tabs card-header-tabs" role="tablist">
         <!-- Tab: Chờ Phê Duyệt -->
         <li class="nav-item">
-          <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pending" type="button">
+          <button class="nav-link {% if default_tab == '#pending' or not default_tab %}active{% endif %}" 
+                  data-bs-toggle="tab" data-bs-target="#pending" type="button">
             <i class="fas fa-user-clock me-2"></i>Chờ Phê Duyệt
             {% if pending_users.total > 0 %}
               <span class="badge bg-danger ms-2">{{ pending_users.total }}</span>
@@ -17,14 +19,23 @@
         </li>
         <!-- Tab: Người Dùng -->
         <li class="nav-item">
-          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#approved" type="button">
+          <button class="nav-link {% if default_tab == '#approved' %}active{% endif %}" 
+                  data-bs-toggle="tab" data-bs-target="#approved" type="button">
             <i class="fas fa-users me-2"></i>Người Dùng
           </button>
         </li>
         <!-- Tab: Quản Trị -->
         <li class="nav-item">
-          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#adminUsers" type="button">
+          <button class="nav-link {% if default_tab == '#adminUsers' %}active{% endif %}" 
+                  data-bs-toggle="tab" data-bs-target="#adminUsers" type="button">
             <i class="fas fa-user-shield me-2"></i>Quản Trị
+          </button>
+        </li>
+        <!-- Tab: Audit Log -->
+        <li class="nav-item">
+          <button class="nav-link {% if default_tab == '#auditLog' %}active{% endif %}" 
+                  data-bs-toggle="tab" data-bs-target="#auditLog" type="button">
+            <i class="fas fa-history me-2"></i>Nhật Ký
           </button>
         </li>
       </ul>
@@ -32,17 +43,26 @@
     <div class="card-body p-0">
       <div class="tab-content">
         <!-- Tab: Chờ Phê Duyệt -->
-        <div class="tab-pane fade show active" id="pending">
+        <div class="tab-pane fade {% if default_tab == '#pending' or not default_tab %}show active{% endif %}" id="pending">
           <div class="p-4">
-            <h5>Danh Sách Chờ Phê Duyệt</h5>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h5 class="mb-0">Danh Sách Chờ Phê Duyệt</h5>
+              {% if pending_users.total > 0 %}
+              <span class="badge bg-primary">{{ pending_users.total }} tài khoản đang chờ</span>
+              {% endif %}
+            </div>
+            
+            {% if pending_users.items %}
             <div class="table-responsive">
               <table class="table table-hover">
                 <thead>
                   <tr>
                     <th>ID</th>
                     <th>Tên Đăng Nhập</th>
+                    <th>Email</th>
                     <th>Họ Tên</th>
                     <th>Mã Nhân Viên</th>
+                    <th>Ngày Đăng Ký</th>
                     <th class="text-center">Thao Tác</th>
                   </tr>
                 </thead>
@@ -51,17 +71,21 @@
                   <tr>
                     <td>{{ user.id }}</td>
                     <td>{{ user.username }}</td>
+                    <td>{{ user.email or '---' }}</td>
                     <td>{{ user.full_name or '---' }}</td>
                     <td>{{ user.employee_code or '---' }}</td>
+                    <td>{{ user.date_created.strftime('%d/%m/%Y') if user.date_created else '---' }}</td>
                     <td class="text-center">
                       <form method="post" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="user_id" value="{{ user.id }}">
                         <input type="hidden" name="current_tab" value="#pending">
-                        <button type="submit" name="action" value="approve" class="btn btn-sm btn-icon" title="Phê duyệt">
-                          <i class="fas fa-check text-success"></i>
+                        <button type="submit" name="action" value="approve" class="btn btn-sm btn-success" title="Phê duyệt">
+                          <i class="fas fa-check me-1"></i>Duyệt
                         </button>
-                        <button type="submit" name="action" value="delete" class="btn btn-sm btn-icon ms-1" title="Xóa" onclick="return confirm('Xóa tài khoản này?')">
-                          <i class="fas fa-trash text-danger"></i>
+                        <button type="submit" name="action" value="delete" class="btn btn-sm btn-danger ms-1" title="Xóa" 
+                                onclick="return confirm('Bạn có chắc muốn xóa tài khoản {{ user.username }}?')">
+                          <i class="fas fa-trash"></i>
                         </button>
                       </form>
                     </td>
@@ -70,6 +94,7 @@
                 </tbody>
               </table>
             </div>
+            
             {% if pending_users.pages > 1 %}
             <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-3">
               <div>Hiển thị {{ pending_users.items|length }} / {{ pending_users.total }} tài khoản</div>
@@ -77,23 +102,27 @@
                 <ul class="pagination mb-0">
                   {% if pending_users.has_prev %}
                   <li class="page-item">
-                    <a class="page-link" href="{{ url_for('admin_panel', pending_page=pending_users.prev_num) }}#pending">
+                    <a class="page-link" href="{{ url_for('admin_panel', pending_page=pending_users.prev_num, tab='#pending') }}">
                       <i class="fas fa-chevron-left"></i>
                     </a>
                   </li>
                   {% endif %}
-                  {% for page_num in pending_users.iter_pages() %}
+                  
+                  {% for page_num in pending_users.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                     {% if page_num %}
                       <li class="page-item {% if page_num == pending_users.page %}active{% endif %}">
-                        <a class="page-link" href="{{ url_for('admin_panel', pending_page=page_num) }}#pending">{{ page_num }}</a>
+                        <a class="page-link" href="{{ url_for('admin_panel', pending_page=page_num, tab='#pending') }}">
+                          {{ page_num }}
+                        </a>
                       </li>
                     {% else %}
                       <li class="page-item disabled"><span class="page-link">...</span></li>
                     {% endif %}
                   {% endfor %}
+                  
                   {% if pending_users.has_next %}
                   <li class="page-item">
-                    <a class="page-link" href="{{ url_for('admin_panel', pending_page=pending_users.next_num) }}#pending">
+                    <a class="page-link" href="{{ url_for('admin_panel', pending_page=pending_users.next_num, tab='#pending') }}">
                       <i class="fas fa-chevron-right"></i>
                     </a>
                   </li>
@@ -102,21 +131,35 @@
               </nav>
             </div>
             {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+              <i class="fas fa-users fa-3x text-muted mb-3"></i>
+              <h5>Không có tài khoản nào đang chờ phê duyệt</h5>
+              <p class="text-muted">Tất cả tài khoản đã được xử lý</p>
+            </div>
+            {% endif %}
           </div>
         </div>
 
         <!-- Tab: Người Dùng -->
-        <div class="tab-pane fade" id="approved">
+        <div class="tab-pane fade {% if default_tab == '#approved' %}show active{% endif %}" id="approved">
           <div class="p-4">
-            <h5>Danh Sách Người Dùng</h5>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h5 class="mb-0">Danh Sách Người Dùng</h5>
+              <span class="badge bg-primary">{{ approved_users.total }} người dùng</span>
+            </div>
+            
+            {% if approved_users.items %}
             <div class="table-responsive">
               <table class="table table-hover">
                 <thead>
                   <tr>
                     <th>ID</th>
                     <th>Tên Đăng Nhập</th>
+                    <th>Email</th>
                     <th>Họ Tên</th>
                     <th>Mã Nhân Viên</th>
+                    <th>Lần Cuối Đăng Nhập</th>
                     <th class="text-center">Thao Tác</th>
                   </tr>
                 </thead>
@@ -125,24 +168,40 @@
                   <tr>
                     <td>{{ user.id }}</td>
                     <td>{{ user.username }}</td>
+                    <td>{{ user.email or '---' }}</td>
                     <td>{{ user.full_name or '---' }}</td>
                     <td>{{ user.employee_code or '---' }}</td>
+                    <td>{{ user.last_login.strftime('%d/%m/%Y %H:%M') if user.last_login else '---' }}</td>
                     <td class="text-center">
                       <form method="post" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="user_id" value="{{ user.id }}">
                         <input type="hidden" name="current_tab" value="#approved">
-                        <!-- Chỉ admin mới cập nhật role -->
-                        <select name="new_role" class="form-select form-select-sm d-inline-block" style="width: auto;">
-                          <option value="user" {% if user.role == 'user' %}selected{% endif %}>User</option>
-                          <option value="manager" {% if user.role == 'manager' %}selected{% endif %}>Manager</option>
-                          <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
-                        </select>
-                        <button type="submit" name="action" value="update_role" class="btn btn-sm btn-icon ms-1" title="Cập nhật Role">
-                          <i class="fas fa-sync-alt"></i>
-                        </button>
-                        <button type="submit" name="action" value="delete" class="btn btn-sm btn-icon ms-1" title="Xóa" onclick="return confirm('Xóa tài khoản này?')">
-                          <i class="fas fa-trash text-danger"></i>
-                        </button>
+                        
+                        <div class="btn-group">
+                          <!-- Dropdown menu -->
+                          <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-cog me-1"></i>Quản lý
+                          </button>
+                          <ul class="dropdown-menu">
+                            <li>
+                              <button type="submit" name="action" value="reset_password" class="dropdown-item">
+                                <i class="fas fa-key me-2"></i>Đặt lại mật khẩu
+                              </button>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                              <button type="button" class="dropdown-item" onclick="showRoleModal('{{ user.id }}', '{{ user.username }}', '{{ user.role }}')">
+                                <i class="fas fa-user-tag me-2"></i>Thay đổi quyền
+                              </button>
+                            </li>
+                          </ul>
+                          
+                          <button type="submit" name="action" value="delete" class="btn btn-sm btn-outline-danger" 
+                                  onclick="return confirm('Bạn có chắc muốn xóa tài khoản {{ user.username }}?')">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </div>
                       </form>
                     </td>
                   </tr>
@@ -150,30 +209,35 @@
                 </tbody>
               </table>
             </div>
+            
             {% if approved_users.pages > 1 %}
             <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-3">
-              <div>Hiển thị {{ approved_users.items|length }} / {{ approved_users.total }} tài khoản</div>
+              <div>Hiển thị {{ approved_users.items|length }} / {{ approved_users.total }} người dùng</div>
               <nav>
                 <ul class="pagination mb-0">
                   {% if approved_users.has_prev %}
                   <li class="page-item">
-                    <a class="page-link" href="{{ url_for('admin_panel', approved_page=approved_users.prev_num) }}#approved">
+                    <a class="page-link" href="{{ url_for('admin_panel', approved_page=approved_users.prev_num, tab='#approved') }}">
                       <i class="fas fa-chevron-left"></i>
                     </a>
                   </li>
                   {% endif %}
-                  {% for page_num in approved_users.iter_pages() %}
+                  
+                  {% for page_num in approved_users.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                     {% if page_num %}
                       <li class="page-item {% if page_num == approved_users.page %}active{% endif %}">
-                        <a class="page-link" href="{{ url_for('admin_panel', approved_page=page_num) }}#approved">{{ page_num }}</a>
+                        <a class="page-link" href="{{ url_for('admin_panel', approved_page=page_num, tab='#approved') }}">
+                          {{ page_num }}
+                        </a>
                       </li>
                     {% else %}
                       <li class="page-item disabled"><span class="page-link">...</span></li>
                     {% endif %}
                   {% endfor %}
+                  
                   {% if approved_users.has_next %}
                   <li class="page-item">
-                    <a class="page-link" href="{{ url_for('admin_panel', approved_page=approved_users.next_num) }}#approved">
+                    <a class="page-link" href="{{ url_for('admin_panel', approved_page=approved_users.next_num, tab='#approved') }}">
                       <i class="fas fa-chevron-right"></i>
                     </a>
                   </li>
@@ -182,21 +246,35 @@
               </nav>
             </div>
             {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+              <i class="fas fa-users fa-3x text-muted mb-3"></i>
+              <h5>Không có người dùng nào</h5>
+              <p class="text-muted">Danh sách người dùng trống</p>
+            </div>
+            {% endif %}
           </div>
         </div>
 
         <!-- Tab: Quản Trị -->
-        <div class="tab-pane fade" id="adminUsers">
+        <div class="tab-pane fade {% if default_tab == '#adminUsers' %}show active{% endif %}" id="adminUsers">
           <div class="p-4">
-            <h5>Danh Sách Quản Trị</h5>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h5 class="mb-0">Danh Sách Quản Trị Viên</h5>
+              <span class="badge bg-primary">{{ admin_users.total }} quản trị viên</span>
+            </div>
+            
+            {% if admin_users.items %}
             <div class="table-responsive">
               <table class="table table-hover">
                 <thead>
                   <tr>
                     <th>ID</th>
                     <th>Tên Đăng Nhập</th>
+                    <th>Email</th>
                     <th>Họ Tên</th>
-                    <th>Mã Nhân Viên</th>
+                    <th>Quyền</th>
+                    <th>Lần Cuối Đăng Nhập</th>
                     <th class="text-center">Thao Tác</th>
                   </tr>
                 </thead>
@@ -205,24 +283,54 @@
                   <tr>
                     <td>{{ user.id }}</td>
                     <td>{{ user.username }}</td>
+                    <td>{{ user.email or '---' }}</td>
                     <td>{{ user.full_name or '---' }}</td>
-                    <td>{{ user.employee_code or '---' }}</td>
+                    <td>
+                      {% if user.role == 'admin' %}
+                        <span class="badge bg-danger">Admin</span>
+                      {% elif user.role == 'manager' %}
+                        <span class="badge bg-warning">Manager</span>
+                      {% endif %}
+                    </td>
+                    <td>{{ user.last_login.strftime('%d/%m/%Y %H:%M') if user.last_login else '---' }}</td>
                     <td class="text-center">
                       <form method="post" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="user_id" value="{{ user.id }}">
                         <input type="hidden" name="current_tab" value="#adminUsers">
-                        <!-- Dropdown cập nhật role (chỉ admin có hiệu lực) -->
-                        <select name="new_role" class="form-select form-select-sm d-inline-block" style="width: auto;">
-                          <option value="manager" {% if user.role == 'manager' %}selected{% endif %}>Manager</option>
-                          <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
-                          <option value="user" {% if user.role == 'user' %}selected{% endif %}>User</option>
-                        </select>
-                        <button type="submit" name="action" value="update_role" class="btn btn-sm btn-icon ms-1" title="Cập nhật Role">
-                          <i class="fas fa-sync-alt"></i>
-                        </button>
-                        <button type="submit" name="action" value="delete" class="btn btn-sm btn-icon ms-1" title="Xóa" onclick="return confirm('Xóa tài khoản này?')">
-                          <i class="fas fa-trash text-danger"></i>
-                        </button>
+                        
+                        <div class="btn-group">
+                          <!-- Dropdown menu -->
+                          <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" 
+                                  {% if user.id == current_user.id %}disabled{% endif %}>
+                            <i class="fas fa-cog me-1"></i>Quản lý
+                          </button>
+                          <ul class="dropdown-menu">
+                            <li>
+                              <button type="submit" name="action" value="reset_password" class="dropdown-item">
+                                <i class="fas fa-key me-2"></i>Đặt lại mật khẩu
+                              </button>
+                            </li>
+                            {% if current_user.role == 'admin' %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                              <button type="button" class="dropdown-item" 
+                                      onclick="showRoleModal('{{ user.id }}', '{{ user.username }}', '{{ user.role }}')"
+                                      {% if user.id == current_user.id or (user.role == 'admin' and user.id != current_user.id) %}disabled{% endif %}>
+                                <i class="fas fa-user-tag me-2"></i>Thay đổi quyền
+                              </button>
+                            </li>
+                            {% endif %}
+                          </ul>
+                          
+                          {% if user.id != current_user.id and current_user.role == 'admin' %}
+                          <button type="submit" name="action" value="delete" class="btn btn-sm btn-outline-danger" 
+                                  onclick="return confirm('Bạn có chắc muốn xóa tài khoản quản trị {{ user.username }}?')"
+                                  {% if user.role == 'admin' and user.id != current_user.id %}disabled{% endif %}>
+                            <i class="fas fa-trash"></i>
+                          </button>
+                          {% endif %}
+                        </div>
                       </form>
                     </td>
                   </tr>
@@ -230,30 +338,35 @@
                 </tbody>
               </table>
             </div>
+            
             {% if admin_users.pages > 1 %}
             <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-3">
-              <div>Hiển thị {{ admin_users.items|length }} / {{ admin_users.total }} quản trị</div>
+              <div>Hiển thị {{ admin_users.items|length }} / {{ admin_users.total }} quản trị viên</div>
               <nav>
                 <ul class="pagination mb-0">
                   {% if admin_users.has_prev %}
                   <li class="page-item">
-                    <a class="page-link" href="{{ url_for('admin_panel', admin_users_page=admin_users.prev_num) }}#adminUsers">
+                    <a class="page-link" href="{{ url_for('admin_panel', admin_users_page=admin_users.prev_num, tab='#adminUsers') }}">
                       <i class="fas fa-chevron-left"></i>
                     </a>
                   </li>
                   {% endif %}
-                  {% for page_num in admin_users.iter_pages() %}
+                  
+                  {% for page_num in admin_users.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                     {% if page_num %}
                       <li class="page-item {% if page_num == admin_users.page %}active{% endif %}">
-                        <a class="page-link" href="{{ url_for('admin_panel', admin_users_page=page_num) }}#adminUsers">{{ page_num }}</a>
+                        <a class="page-link" href="{{ url_for('admin_panel', admin_users_page=page_num, tab='#adminUsers') }}">
+                          {{ page_num }}
+                        </a>
                       </li>
                     {% else %}
                       <li class="page-item disabled"><span class="page-link">...</span></li>
                     {% endif %}
                   {% endfor %}
+                  
                   {% if admin_users.has_next %}
                   <li class="page-item">
-                    <a class="page-link" href="{{ url_for('admin_panel', admin_users_page=admin_users.next_num) }}#adminUsers">
+                    <a class="page-link" href="{{ url_for('admin_panel', admin_users_page=admin_users.next_num, tab='#adminUsers') }}">
                       <i class="fas fa-chevron-right"></i>
                     </a>
                   </li>
@@ -262,10 +375,219 @@
               </nav>
             </div>
             {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+              <i class="fas fa-user-shield fa-3x text-muted mb-3"></i>
+              <h5>Không có quản trị viên nào</h5>
+              <p class="text-muted">Danh sách quản trị viên trống</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Tab: Audit Log -->
+        <div class="tab-pane fade {% if default_tab == '#auditLog' %}show active{% endif %}" id="auditLog">
+          <div class="p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h5 class="mb-0">Nhật Ký Hoạt Động</h5>
+              <span class="badge bg-primary">{{ audit_logs.total }} bản ghi</span>
+            </div>
+            
+            {% if audit_logs.items %}
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Thời Gian</th>
+                    <th>Người Dùng</th>
+                    <th>Hành Động</th>
+                    <th>Chi Tiết</th>
+                    <th>IP</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for log in audit_logs.items %}
+                  <tr>
+                    <td>{{ log.id }}</td>
+                    <td>{{ log.timestamp.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+                    <td>
+                      {% if log.user %}
+                        {{ log.user.username }}
+                        <span class="badge bg-secondary">{{ log.user.role }}</span>
+                      {% else %}
+                        ---
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if log.action == 'login' %}
+                        <span class="badge bg-success">Đăng nhập</span>
+                      {% elif log.action == 'logout' %}
+                        <span class="badge bg-secondary">Đăng xuất</span>
+                      {% elif log.action == 'add_product' %}
+                        <span class="badge bg-primary">Thêm sản phẩm</span>
+                      {% elif log.action == 'edit_product' %}
+                        <span class="badge bg-warning">Sửa sản phẩm</span>
+                      {% elif log.action == 'delete_product' %}
+                        <span class="badge bg-danger">Xóa sản phẩm</span>
+                      {% elif log.action == 'approve_user' %}
+                        <span class="badge bg-info">Phê duyệt tài khoản</span>
+                      {% elif log.action == 'delete_user' %}
+                        <span class="badge bg-danger">Xóa tài khoản</span>
+                      {% elif log.action == 'change_role' %}
+                        <span class="badge bg-warning">Đổi quyền</span>
+                      {% elif log.action == 'reset_password' %}
+                        <span class="badge bg-info">Đặt lại mật khẩu</span>
+                      {% elif log.action == 'update_profile' %}
+                        <span class="badge bg-primary">Cập nhật hồ sơ</span>
+                      {% elif log.action == 'change_password' %}
+                        <span class="badge bg-primary">Đổi mật khẩu</span>
+                      {% else %}
+                        <span class="badge bg-secondary">{{ log.action }}</span>
+                      {% endif %}
+                    </td>
+                    <td>{{ log.details or '---' }}</td>
+                    <td>{{ log.ip_address or '---' }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            
+            {% if audit_logs.pages > 1 %}
+            <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-3">
+              <div>Hiển thị {{ audit_logs.items|length }} / {{ audit_logs.total }} bản ghi</div>
+              <nav>
+                <ul class="pagination mb-0">
+                  {% if audit_logs.has_prev %}
+                  <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin_panel', audit_page=audit_logs.prev_num, tab='#auditLog') }}">
+                      <i class="fas fa-chevron-left"></i>
+                    </a>
+                  </li>
+                  {% endif %}
+                  
+                  {% for page_num in audit_logs.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if page_num %}
+                      <li class="page-item {% if page_num == audit_logs.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin_panel', audit_page=page_num, tab='#auditLog') }}">
+                          {{ page_num }}
+                        </a>
+                      </li>
+                    {% else %}
+                      <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                  {% endfor %}
+                  
+                  {% if audit_logs.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin_panel', audit_page=audit_logs.next_num, tab='#auditLog') }}">
+                      <i class="fas fa-chevron-right"></i>
+                    </a>
+                  </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+              <i class="fas fa-history fa-3x text-muted mb-3"></i>
+              <h5>Không có nhật ký nào</h5>
+              <p class="text-muted">Nhật ký hoạt động trống</p>
+            </div>
+            {% endif %}
           </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Modal thay đổi quyền -->
+<div class="modal fade" id="roleModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-user-tag me-2"></i>Thay Đổi Quyền</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="user_id" id="roleUserId">
+        <input type="hidden" name="current_tab" id="roleCurrentTab">
+        <input type="hidden" name="action" value="update_role">
+        
+        <div class="modal-body">
+          <p>Thay đổi quyền cho tài khoản <strong id="roleUsername"></strong></p>
+          
+          <div class="mb-3">
+            <label class="form-label">Quyền</label>
+            <select name="new_role" class="form-select" id="roleSelect">
+              <option value="user">User (Người dùng)</option>
+              <option value="manager">Manager (Quản lý)</option>
+              <option value="admin">Admin (Quản trị viên)</option>
+            </select>
+          </div>
+          
+          <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Lưu ý:</strong> Thay đổi quyền có thể ảnh hưởng đến khả năng truy cập của người dùng.
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="submit" class="btn btn-primary">Lưu Thay Đổi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+  // Lưu tab active khi chuyển trang
+  document.addEventListener('DOMContentLoaded', function() {
+    // Lấy active tab từ URL hash hoặc từ biến default_tab
+    let activeTab = window.location.hash || '{{ default_tab }}';
+    
+    // Nếu không có tab nào được chỉ định, mặc định là #pending
+    if (!activeTab) {
+      activeTab = '#pending';
+    }
+    
+    // Kích hoạt tab
+    const tabEl = document.querySelector('button[data-bs-target="' + activeTab + '"]');
+    if (tabEl) {
+      const tab = new bootstrap.Tab(tabEl);
+      tab.show();
+    }
+    
+    // Lưu tab khi chuyển đổi
+    const tabLinks = document.querySelectorAll('button[data-bs-toggle="tab"]');
+    tabLinks.forEach(tabLink => {
+      tabLink.addEventListener('shown.bs.tab', function(event) {
+        const targetId = event.target.getAttribute('data-bs-target');
+        window.location.hash = targetId;
+      });
+    });
+  });
+  
+  // Hiển thị modal thay đổi quyền
+  function showRoleModal(userId, username, currentRole) {
+    document.getElementById('roleUserId').value = userId;
+    document.getElementById('roleUsername').textContent = username;
+    document.getElementById('roleSelect').value = currentRole;
+    
+    // Xác định tab hiện tại
+    const activeTab = document.querySelector('.tab-pane.active').id;
+    document.getElementById('roleCurrentTab').value = '#' + activeTab;
+    
+    // Hiển thị modal
+    const roleModal = new bootstrap.Modal(document.getElementById('roleModal'));
+    roleModal.show();
+  }
+</script>
 {% endblock %}

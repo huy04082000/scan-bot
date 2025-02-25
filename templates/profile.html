@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% block title %}Hồ Sơ Cá Nhân{% endblock %}
+{% block header_title %}<i class="fas fa-user-circle me-2"></i>Hồ Sơ Cá Nhân{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-lg-4 mb-4">
+      <div class="card profile-card">
+        <div class="profile-header">
+          <div class="profile-avatar">
+            <i class="fas fa-user"></i>
+          </div>
+          <h4 class="profile-name">{{ current_user.full_name or current_user.username }}</h4>
+          <div class="profile-role">
+            <span class="badge bg-light text-primary">{{ current_user.role }}</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="list-group list-group-flush">
+            <div class="list-group-item px-0 d-flex justify-content-between">
+              <span class="text-muted">Tên đăng nhập:</span>
+              <span class="fw-medium">{{ current_user.username }}</span>
+            </div>
+            <div class="list-group-item px-0 d-flex justify-content-between">
+              <span class="text-muted">Email:</span>
+              <span class="fw-medium">{{ current_user.email or '---' }}</span>
+            </div>
+            <div class="list-group-item px-0 d-flex justify-content-between">
+              <span class="text-muted">Mã nhân viên:</span>
+              <span class="fw-medium">{{ current_user.employee_code or '---' }}</span>
+            </div>
+            <div class="list-group-item px-0 d-flex justify-content-between">
+              <span class="text-muted">Ngày tạo tài khoản:</span>
+              <span class="fw-medium">{{ current_user.date_created.strftime('%d/%m/%Y') if current_user.date_created else '---' }}</span>
+            </div>
+            <div class="list-group-item px-0 d-flex justify-content-between">
+              <span class="text-muted">Đăng nhập cuối:</span>
+              <span class="fw-medium">{{ current_user.last_login.strftime('%d/%m/%Y %H:%M') if current_user.last_login else '---' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-lg-8">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-user-edit me-2"></i>Cập Nhật Thông Tin</h5>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="update_profile">
+            
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Họ và Tên</label>
+                <input type="text" class="form-control" name="full_name" value="{{ current_user.full_name or '' }}" placeholder="Nhập họ và tên">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" name="email" value="{{ current_user.email or '' }}" placeholder="Nhập email">
+              </div>
+            </div>
+            
+            <div class="mt-4">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-2"></i>Lưu Thay Đổi
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-lock me-2"></i>Đổi Mật Khẩu</h5>
+        </div>
+        <div class="card-body">
+          <form method="post" id="changePasswordForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="change_password">
+            
+            <div class="mb-3">
+              <label class="form-label">Mật Khẩu Hiện Tại</label>
+              <div class="input-group">
+                <input type="password" class="form-control" name="current_password" id="current_password" placeholder="Nhập mật khẩu hiện tại" required>
+                <button class="btn btn-outline-secondary toggle-password" type="button" data-target="current_password">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">Mật Khẩu Mới</label>
+              <div class="input-group">
+                <input type="password" class="form-control" name="new_password" id="new_password" placeholder="Nhập mật khẩu mới" required>
+                <button class="btn btn-outline-secondary toggle-password" type="button" data-target="new_password">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+              <div class="form-text">Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.</div>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">Xác Nhận Mật Khẩu Mới</label>
+              <div class="input-group">
+                <input type="password" class="form-control" name="confirm_password" id="confirm_password" placeholder="Nhập lại mật khẩu mới" required>
+                <button class="btn btn-outline-secondary toggle-password" type="button" data-target="confirm_password">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div class="password-strength mt-3 mb-3" id="passwordStrength">
+              <div class="progress" style="height: 5px;">
+                <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+              <div class="d-flex justify-content-between mt-1">
+                <small>Độ mạnh mật khẩu:</small>
+                <small id="strengthText">---</small>
+              </div>
+            </div>
+            
+            <div class="mt-4">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-key me-2"></i>Đổi Mật Khẩu
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+  // Toggle hiển thị mật khẩu
+  document.querySelectorAll('.toggle-password').forEach(button => {
+    button.addEventListener('click', function() {
+      const targetId = this.getAttribute('data-target');
+      const input = document.getElementById(targetId);
+      const icon = this.querySelector('i');
+      
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    });
+  });
+  
+  // Kiểm tra độ mạnh mật khẩu
+  const passwordInput = document.getElementById('new_password');
+  const confirmInput = document.getElementById('confirm_password');
+  const progressBar = document.querySelector('#passwordStrength .progress-bar');
+  const strengthText = document.getElementById('strengthText');
+  
+  passwordInput.addEventListener('input', function() {
+    const password = this.value;
+    let strength = 0;
+    let strengthLabel = '';
+    
+    if (password.length >= 8) strength += 20;
+    if (password.match(/[a-z]+/)) strength += 20;
+    if (password.match(/[A-Z]+/)) strength += 20;
+    if (password.match(/[0-9]+/)) strength += 20;
+    if (password.match(/[!@#$%^&*(),.?":{}|<>]+/)) strength += 20;
+    
+    progressBar.style.width = strength + '%';
+    
+    if (strength <= 20) {
+      progressBar.className = 'progress-bar bg-danger';
+      strengthLabel = 'Rất yếu';
+    } else if (strength <= 40) {
+      progressBar.className = 'progress-bar bg-warning';
+      strengthLabel = 'Yếu';
+    } else if (strength <= 60) {
+      progressBar.className = 'progress-bar bg-info';
+      strengthLabel = 'Trung bình';
+    } else if (strength <= 80) {
+      progressBar.className = 'progress-bar bg-primary';
+      strengthLabel = 'Mạnh';
+    } else {
+      progressBar.className = 'progress-bar bg-success';
+      strengthLabel = 'Rất mạnh';
+    }
+    
+    strengthText.textContent = strengthLabel;
+  });
+  
+  // Kiểm tra mật khẩu trùng khớp
+  document.getElementById('changePasswordForm').addEventListener('submit', function(event) {
+    const password = passwordInput.value;
+    const confirmPassword = confirmInput.value;
+    
+    if (password !== confirmPassword) {
+      alert('Mật khẩu xác nhận không khớp!');
+      event.preventDefault();
+      return;
+    }
+    
+    // Kiểm tra độ mạnh
+    if (password.length < 8 || 
+        !password.match(/[a-z]+/) || 
+        !password.match(/[A-Z]+/) || 
+        !password.match(/[0-9]+/) || 
+        !password.match(/[!@#$%^&*(),.?":{}|<>]+/)) {
+      alert('Mật khẩu không đủ mạnh! Phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.');
+      event.preventDefault();
+    }
+  });
+</script>
+{% endblock %}

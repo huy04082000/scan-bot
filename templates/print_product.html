@@ -1,65 +1,187 @@
 {% extends 'base.html' %}
 {% block title %}In Thông Tin Sản Phẩm{% endblock %}
 {% block header_title %}<i class="fas fa-print me-2"></i>In Thông Tin Sản Phẩm{% endblock %}
+
+{% block extra_head %}
+<style>
+  @media print {
+    body {
+      background-color: #fff;
+      font-size: 12pt;
+    }
+    .print-area {
+      padding: 20px;
+      max-width: 100%;
+    }
+    .company-header {
+      margin-bottom: 30px;
+    }
+    .no-print-break {
+      page-break-inside: avoid;
+    }
+    .product-info {
+      margin-bottom: 30px;
+    }
+    .qr-container {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .print-footer {
+      margin-top: 30px;
+      text-align: center;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container my-4">
-  <div class="card print-card">
-    <div class="card-header d-print-none d-flex justify-content-between align-items-center">
-      <h5><i class="fas fa-print me-2"></i>Trang In</h5>
+  <div class="card print-card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center d-print-none">
+      <h5 class="mb-0"><i class="fas fa-print me-2"></i>Trang In</h5>
       <div class="btn-group">
-        <button onclick="window.print();" class="btn btn-primary"><i class="fas fa-print me-2"></i>In Ngay</button>
-        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-light ms-2"><i class="fas fa-arrow-left me-2"></i>Quay Lại</a>
+        <button onclick="window.print();" class="btn btn-primary">
+          <i class="fas fa-print me-2"></i>In Ngay
+        </button>
+        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-outline-secondary ms-2">
+          <i class="fas fa-arrow-left me-2"></i>Quay Lại
+        </a>
       </div>
     </div>
-    <div class="card-body p-0">
-      <div class="print-area p-4">
-        <div class="company-header d-flex align-items-center mb-4">
+    <div class="card-body">
+      <div class="print-area">
+        <!-- Header công ty -->
+        <div class="company-header d-flex align-items-center mb-4 no-print-break">
           <div class="company-logo me-3">
             <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="max-height:80px;">
           </div>
           <div class="company-info">
-            <h4 class="company-name">Enterprise Management</h4>
-            <p class="company-address">123 Đường ABC, Quận XYZ, TP. HCM</p>
+            <h3 class="company-name mb-0">Enterprise Management</h3>
+            <p class="company-address text-muted mb-0">123 Đường ABC, Quận XYZ, TP. HCM</p>
           </div>
         </div>
-        <div class="product-info mb-4">
-          <h5 class="text-center">THÔNG TIN SẢN PHẨM</h5>
-          <p class="text-center"><strong>Mã SP:</strong> {{ product.product_code }}</p>
-          <div class="row">
-            <div class="col-md-6">
-              <p><strong>Tên Sản Phẩm:</strong> {{ product.product_name }}</p>
-              <p><strong>Số Seri:</strong> {{ product.serial_number }}</p>
+        
+        <!-- Thông tin sản phẩm -->
+        <div class="product-info mb-4 no-print-break">
+          <div class="text-center mb-4">
+            <h4 class="mb-1">THÔNG TIN SẢN PHẨM</h4>
+            <p class="text-primary fw-bold mb-0">{{ product.product_code }}</p>
+          </div>
+          
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h6 class="card-subtitle mb-2 text-muted">Thông Tin Cơ Bản</h6>
+                  <table class="table table-borderless">
+                    <tr>
+                      <td style="width: 40%;"><strong>Tên Sản Phẩm:</strong></td>
+                      <td>{{ product.product_name }}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Số Seri:</strong></td>
+                      <td>{{ product.serial_number }}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Tình Trạng:</strong></td>
+                      <td>
+                        {% if product.status == 'chạy tốt' %}
+                          <span class="text-success">Hoạt Động Tốt</span>
+                        {% elif product.status == 'đang sửa' %}
+                          <span class="text-warning">Đang Sửa Chữa</span>
+                        {% else %}
+                          <span class="text-danger">Đang Hỏng</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
             </div>
-            <div class="col-md-6">
-              <p><strong>Ngày Nhập:</strong> {{ product.date_entry.strftime("%d/%m/%Y %H:%M") }}</p>
-              <p><strong>Ngày Cấp:</strong> {{ product.date_issue.strftime("%d/%m/%Y") }}</p>
+            <div class="col-6">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h6 class="card-subtitle mb-2 text-muted">Thông Tin Khác</h6>
+                  <table class="table table-borderless">
+                    <tr>
+                      <td style="width: 40%;"><strong>Ngày Nhập:</strong></td>
+                      <td>{{ product.date_entry.strftime("%d/%m/%Y") }}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Ngày Cấp:</strong></td>
+                      <td>{{ product.date_issue.strftime("%d/%m/%Y") }}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Bộ Phận:</strong></td>
+                      <td>{{ product.department }}</td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
-          <p><strong>Bộ Phận:</strong> {{ product.department }}</p>
-          <p>
-            <strong>Tình Trạng:</strong>
-            {% if product.status == 'chạy tốt' %}
-              Hoạt Động Tốt
-            {% elif product.status == 'đang sửa' %}
-              Đang Sửa Chữa
-            {% else %}
-              Đang Hỏng
-            {% endif %}
-          </p>
+          
+          {% if product.notes %}
+          <div class="card mt-3">
+            <div class="card-body">
+              <h6 class="card-subtitle mb-2 text-muted">Ghi Chú</h6>
+              <p class="mb-0">{{ product.notes|nl2br }}</p>
+            </div>
+          </div>
+          {% endif %}
         </div>
-        <div class="qr-container text-center mb-4">
-          <img src="{{ url_for('get_qr', product_id=product.id) }}" alt="QR Code" class="img-fluid" style="max-width:200px;">
+        
+        <!-- QR Code -->
+        <div class="qr-container my-4 no-print-break">
+          <div class="card">
+            <div class="card-body text-center">
+              <img src="{{ url_for('get_qr', product_id=product.id) }}" alt="QR Code" class="img-fluid" style="max-width:200px;">
+              <p class="mt-2 mb-0 small text-muted">Quét mã QR để xem chi tiết sản phẩm</p>
+              <p class="mb-0 small">{{ product.qr_url }}</p>
+            </div>
+          </div>
         </div>
-        <div class="additional-info">
-          <p><strong>Người Nhập:</strong> {% if product.entered_by_user %}{{ product.entered_by_user.full_name }}{% else %}---{% endif %}</p>
-          <p><strong>Ngày In:</strong> {{ now.strftime("%d/%m/%Y %H:%M") }}</p>
+        
+        <!-- Thông tin bổ sung -->
+        <div class="additional-info no-print-break">
+          <div class="row g-2">
+            <div class="col-6">
+              <strong>Người Nhập:</strong> 
+              {% if product.entered_by_user %}
+                {{ product.entered_by_user.full_name or product.entered_by_user.username }}
+              {% else %}
+                ---
+              {% endif %}
+            </div>
+            <div class="col-6 text-end">
+              <strong>Ngày In:</strong> {{ now.strftime("%d/%m/%Y %H:%M") }}
+            </div>
+          </div>
         </div>
-        <div class="print-footer text-center mt-4">
-          <p>Document generated by Enterprise Management System</p>
-          <p>Page 1 of 1</p>
+        
+        <!-- Footer -->
+        <div class="print-footer mt-5 text-center">
+          <hr>
+          <p class="small text-muted mb-0">Tài liệu được tạo bởi Hệ Thống Quản Lý Sản Phẩm Enterprise</p>
+          <p class="small mb-0">Trang 1 / 1</p>
         </div>
       </div>
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+  // Tự động in khi trang đã tải xong
+  document.addEventListener('DOMContentLoaded', function() {
+    // Đợi 1 giây để đảm bảo tất cả hình ảnh đã tải xong
+    setTimeout(function() {
+      // In tự động khi được yêu cầu
+      {% if request.args.get('auto_print') %}
+      window.print();
+      {% endif %}
+    }, 1000);
+  });
+</script>
 {% endblock %}

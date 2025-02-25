@@ -1,50 +1,84 @@
 {% extends 'base.html' %}
 {% block title %}Đăng Ký - Quản Lý Sản Phẩm{% endblock %}
 {% block header_title %}Đăng Ký Tài Khoản{% endblock %}
+
 {% block content %}
 <div class="container">
   <div class="row justify-content-center">
-    <div class="col-lg-6">
-      <div class="card shadow-sm my-5">
+    <div class="col-lg-7">
+      <div class="card shadow-lg">
         <div class="card-body p-4">
-          <h3 class="text-center mb-4">Tạo Tài Khoản Mới</h3>
-          <form method="post" novalidate>
+          <h3 class="text-center mb-4">Đăng Ký Tài Khoản</h3>
+          <p class="text-center text-muted mb-4">Vui lòng điền đầy đủ thông tin để tạo tài khoản mới</p>
+          
+          <form method="post" novalidate id="registerForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
             <!-- Thông tin tài khoản -->
-            <div class="mb-3">
-              <label class="form-label">Tên Đăng Nhập</label>
-              <input type="text" class="form-control" name="username" placeholder="Nhập tên đăng nhập" required minlength="4" maxlength="20">
-              <small class="form-text text-muted">4-20 ký tự</small>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Mật Khẩu</label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                <input type="password" class="form-control" name="password" id="password" placeholder="Tạo mật khẩu" required minlength="8">
-                <button class="btn btn-outline-secondary" type="button" id="togglePassword"><i class="fas fa-eye"></i></button>
+            <div class="card mb-4">
+              <div class="card-header bg-light-primary">
+                <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Thông Tin Tài Khoản</h5>
+              </div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label required">Tên Đăng Nhập</label>
+                    <input type="text" class="form-control" name="username" id="username" placeholder="Tên đăng nhập" required minlength="4" maxlength="20">
+                    <div class="form-text">Tối thiểu 4 ký tự, tối đa 20 ký tự</div>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" name="email" id="email" placeholder="Email liên hệ">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label required">Mật Khẩu</label>
+                    <div class="input-group">
+                      <input type="password" class="form-control" name="password" id="password" placeholder="Mật khẩu" required minlength="8">
+                      <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                        <i class="fas fa-eye"></i>
+                      </button>
+                    </div>
+                    <div class="form-text">Tối thiểu 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt</div>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label required">Xác Nhận Mật Khẩu</label>
+                    <div class="input-group">
+                      <input type="password" class="form-control" name="confirm_password" id="confirm_password" placeholder="Nhập lại mật khẩu" required>
+                      <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                        <i class="fas fa-eye"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="mb-3">
-              <label class="form-label">Xác Nhận Mật Khẩu</label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                <input type="password" class="form-control" name="confirm_password" id="confirm_password" placeholder="Nhập lại mật khẩu" required>
-                <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword"><i class="fas fa-eye"></i></button>
-              </div>
-            </div>
+            
             <!-- Thông tin cá nhân -->
-            <div class="mb-3">
-              <label class="form-label">Họ Tên</label>
-              <input type="text" class="form-control" name="full_name" placeholder="Nhập họ tên đầy đủ" required>
+            <div class="card mb-4">
+              <div class="card-header bg-light-primary">
+                <h5 class="mb-0"><i class="fas fa-address-card me-2"></i>Thông Tin Cá Nhân</h5>
+              </div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label required">Họ Tên Đầy Đủ</label>
+                    <input type="text" class="form-control" name="full_name" id="full_name" placeholder="Họ và tên" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label required">Mã Nhân Viên</label>
+                    <input type="text" class="form-control" name="employee_code" id="employee_code" placeholder="Mã nhân viên" required>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="mb-3">
-              <label class="form-label">Mã Nhân Viên</label>
-              <input type="text" class="form-control" name="employee_code" placeholder="Nhập mã nhân viên" required>
-            </div>
-            <div class="d-grid mb-3">
-              <button type="submit" class="btn btn-primary">Đăng Ký</button>
-            </div>
-            <div class="text-center">
-              Đã có tài khoản? <a href="{{ url_for('login') }}">Đăng Nhập Ngay</a>
+            
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary py-2">
+                <i class="fas fa-user-plus me-2"></i>Đăng Ký Tài Khoản
+              </button>
+              <p class="text-center mt-3">
+                Đã có tài khoản? <a href="{{ url_for('login') }}">Đăng Nhập Ngay</a>
+              </p>
             </div>
           </form>
         </div>
@@ -52,4 +86,60 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+  // Hiển thị/ẩn mật khẩu
+  document.getElementById('togglePassword').addEventListener('click', function() {
+    const passwordInput = document.getElementById('password');
+    const icon = this.querySelector('i');
+    
+    if (passwordInput.type === 'password') {
+      passwordInput.type = 'text';
+      icon.classList.remove('fa-eye');
+      icon.classList.add('fa-eye-slash');
+    } else {
+      passwordInput.type = 'password';
+      icon.classList.remove('fa-eye-slash');
+      icon.classList.add('fa-eye');
+    }
+  });
+  
+  document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
+    const passwordInput = document.getElementById('confirm_password');
+    const icon = this.querySelector('i');
+    
+    if (passwordInput.type === 'password') {
+      passwordInput.type = 'text';
+      icon.classList.remove('fa-eye');
+      icon.classList.add('fa-eye-slash');
+    } else {
+      passwordInput.type = 'password';
+      icon.classList.remove('fa-eye-slash');
+      icon.classList.add('fa-eye');
+    }
+  });
+  
+  // Form validation
+  const form = document.getElementById('registerForm');
+  form.addEventListener('submit', function(event) {
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    
+    // Kiểm tra mật khẩu trùng khớp
+    if (password !== confirmPassword) {
+      alert('Mật khẩu xác nhận không khớp!');
+      event.preventDefault();
+      return;
+    }
+    
+    // Kiểm tra độ mạnh mật khẩu
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      alert('Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt!');
+      event.preventDefault();
+    }
+  });
+</script>
 {% endblock %}

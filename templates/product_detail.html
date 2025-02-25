@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
 {% block title %}Chi Tiết Sản Phẩm{% endblock %}
-{% block header_title %}Chi Tiết Sản Phẩm{% endblock %}
+{% block header_title %}<i class="fas fa-cube me-2"></i>Chi Tiết Sản Phẩm{% endblock %}
+
 {% block content %}
-<div class="container my-4">
+<div class="container">
   <div class="row">
     <!-- Thông tin sản phẩm -->
     <div class="col-lg-8">
-      <div class="card mb-4">
+      <div class="card mb-4 shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center">
           <div>
             <span class="fw-bold text-primary">{{ product.product_code }}</span>
@@ -23,66 +24,129 @@
           </div>
         </div>
         <div class="card-body">
-          <div class="row g-3">
-            <div class="col-md-6">
-              <strong>Ngày Nhập:</strong> {{ product.date_entry.strftime("%d/%m/%Y %H:%M") }}
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <div class="d-flex">
+                <div class="text-muted" style="width: 120px;">Số Seri:</div>
+                <div class="fw-medium flex-grow-1">{{ product.serial_number }}</div>
+              </div>
             </div>
-            <div class="col-md-6">
-              <strong>Số Seri:</strong> {{ product.serial_number }}
+            <div class="col-md-6 mb-3">
+              <div class="d-flex">
+                <div class="text-muted" style="width: 120px;">Ngày Nhập:</div>
+                <div class="fw-medium">{{ product.date_entry.strftime("%d/%m/%Y %H:%M") }}</div>
+              </div>
             </div>
-            <div class="col-md-6">
-              <strong>Ngày Cấp:</strong> {{ product.date_issue.strftime("%d/%m/%Y") }}
+            <div class="col-md-6 mb-3">
+              <div class="d-flex">
+                <div class="text-muted" style="width: 120px;">Ngày Cấp:</div>
+                <div class="fw-medium">{{ product.date_issue.strftime("%d/%m/%Y") }}</div>
+              </div>
             </div>
-            <div class="col-md-6">
-              <strong>Bộ Phận:</strong> {{ product.department }}
+            <div class="col-md-6 mb-3">
+              <div class="d-flex">
+                <div class="text-muted" style="width: 120px;">Bộ Phận:</div>
+                <div class="fw-medium">{{ product.department }}</div>
+              </div>
             </div>
-            <div class="col-md-6">
-              <strong>Người Nhập:</strong> {% if product.entered_by_user %}{{ product.entered_by_user.full_name }}{% else %}---{% endif %}
+            <div class="col-md-6 mb-3">
+              <div class="d-flex">
+                <div class="text-muted" style="width: 120px;">Người Nhập:</div>
+                <div class="fw-medium">
+                  {% if product.entered_by_user %}
+                    {{ product.entered_by_user.full_name or product.entered_by_user.username }}
+                  {% else %}
+                    ---
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="d-flex">
+                <div class="text-muted" style="width: 120px;">Cập Nhật:</div>
+                <div class="fw-medium">{{ product.last_updated.strftime("%d/%m/%Y %H:%M") if product.last_updated else "---" }}</div>
+              </div>
             </div>
           </div>
+          
+          {% if product.notes %}
+          <div class="mt-3">
+            <h6 class="mb-2"><i class="fas fa-comment-alt me-2"></i>Ghi Chú</h6>
+            <div class="p-3 bg-light rounded">
+              {{ product.notes|nl2br }}
+            </div>
+          </div>
+          {% endif %}
         </div>
       </div>
+      
+      <!-- Timeline hoạt động -->
+      <!-- Có thể bổ sung sau -->
     </div>
+    
     <!-- Mã QR và thao tác nhanh -->
     <div class="col-lg-4">
-      <div class="card mb-4 text-center">
+      <div class="card mb-4 shadow-sm text-center">
         <div class="card-header">
-          <h5>Mã QR</h5>
+          <h5 class="mb-0"><i class="fas fa-qrcode me-2"></i>Mã QR</h5>
         </div>
         <div class="card-body">
           <img src="{{ url_for('get_qr', product_id=product.id) }}" alt="QR Code" class="img-fluid mb-3" style="max-width:200px;">
           <div class="d-grid gap-2">
-            <a href="{{ url_for('print_product', product_id=product.id) }}" class="btn btn-outline-primary">In Mã QR</a>
-            <a href="{{ url_for('get_qr', product_id=product.id) }}" download="qr_{{ product.product_code }}.png" class="btn btn-outline-success">Tải Mã QR</a>
+            <a href="{{ url_for('print_product', product_id=product.id) }}" class="btn btn-outline-primary">
+              <i class="fas fa-print me-2"></i>In Thông Tin
+            </a>
+            <a href="{{ url_for('export_qr', product_id=product.id) }}" class="btn btn-outline-success" download>
+              <i class="fas fa-download me-2"></i>Tải Mã QR
+            </a>
           </div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-body text-center">
-          {% if current_user.is_authenticated and current_user.role in ['manager', 'admin'] %}
-          <a href="{{ url_for('edit_product', product_id=product.id) }}" class="btn btn-warning w-100 mb-2">Chỉnh Sửa</a>
-          <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#deleteModal">Xóa Sản Phẩm</button>
-          {% endif %}
-          <a href="{{ url_for('index') }}" class="btn btn-light w-100 mt-2">Quay Lại</a>
+      
+      <!-- Thao tác nhanh -->
+      <div class="card shadow-sm">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Thao Tác</h5>
+        </div>
+        <div class="card-body">
+          <div class="d-grid gap-2">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+              <i class="fas fa-arrow-left me-2"></i>Quay Lại
+            </a>
+            
+            {% if current_user.is_authenticated and current_user.role in ['manager', 'admin'] %}
+            <a href="{{ url_for('edit_product', product_id=product.id) }}" class="btn btn-warning">
+              <i class="fas fa-edit me-2"></i>Chỉnh Sửa
+            </a>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+              <i class="fas fa-trash me-2"></i>Xóa Sản Phẩm
+            </button>
+            {% endif %}
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
 <!-- Modal xác nhận xóa sản phẩm -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title text-danger">Xác Nhận Xóa</h5>
+        <h5 class="modal-title text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Xác Nhận Xóa</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        Bạn có chắc muốn xóa sản phẩm này không?
+        <p>Bạn có chắc chắn muốn xóa sản phẩm <strong>{{ product.product_name }}</strong>?</p>
+        <p class="text-danger small">Lưu ý: Hành động này không thể hoàn tác.</p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-        <button type="button" class="btn btn-danger">Xóa</button>
+        <form action="{{ url_for('delete_product', product_id=product.id) }}" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-danger">Xóa</button>
+        </form>
       </div>
     </div>
   </div>

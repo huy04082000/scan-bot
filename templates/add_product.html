@@ -1,59 +1,82 @@
 {% extends 'base.html' %}
 {% block title %}Thêm Sản Phẩm Mới{% endblock %}
-{% block header_title %}Thêm Sản Phẩm Mới{% endblock %}
+{% block header_title %}<i class="fas fa-plus-circle me-2"></i>Thêm Sản Phẩm Mới{% endblock %}
+
 {% block content %}
-<div class="container my-4">
+<div class="container">
   <div class="row justify-content-center">
-    <div class="col-lg-8">
+    <div class="col-lg-9">
       <div class="card shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center">
-          <h5><i class="fas fa-plus-circle me-2"></i>Thông Tin Sản Phẩm</h5>
+          <h5 class="mb-0"><i class="fas fa-cube me-2"></i>Thông Tin Sản Phẩm</h5>
           <span class="badge bg-primary">Mới</span>
         </div>
         <div class="card-body">
-          <form method="post" novalidate>
+          <form method="post" id="addProductForm" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
             <!-- Thông tin cơ bản -->
             <div class="mb-4">
-              <h6><i class="fas fa-info-circle me-2"></i>Thông Tin Cơ Bản</h6>
-              <div class="mb-3">
-                <label class="form-label required">Tên Sản Phẩm</label>
-                <input type="text" class="form-control" name="product_name" placeholder="Nhập tên sản phẩm" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label required">Số Seri</label>
-                <input type="text" class="form-control" name="serial_number" placeholder="Nhập số seri" required>
-              </div>
-            </div>
-            <!-- Thông tin bổ sung -->
-            <div class="mb-4">
-              <h6><i class="fas fa-clipboard-list me-2"></i>Thông Tin Bổ Sung</h6>
+              <h6 class="card-subtitle mb-3 pb-2 border-bottom"><i class="fas fa-info-circle me-2"></i>Thông Tin Cơ Bản</h6>
               <div class="row g-3">
                 <div class="col-md-6">
+                  <label class="form-label required">Tên Sản Phẩm</label>
+                  <input type="text" class="form-control" name="product_name" id="product_name" placeholder="Nhập tên sản phẩm" required>
+                  <div class="invalid-feedback">Vui lòng nhập tên sản phẩm</div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label required">Số Seri</label>
+                  <input type="text" class="form-control" name="serial_number" id="serial_number" placeholder="Nhập số seri" required>
+                  <div class="invalid-feedback" id="serialFeedback">Vui lòng nhập số seri</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Thông tin bổ sung -->
+            <div class="mb-4">
+              <h6 class="card-subtitle mb-3 pb-2 border-bottom"><i class="fas fa-clipboard-list me-2"></i>Thông Tin Bổ Sung</h6>
+              <div class="row g-3">
+                <div class="col-md-4">
                   <label class="form-label required">Ngày Cấp</label>
-                  <input type="date" class="form-control" name="date_issue" required>
+                  <input type="date" class="form-control" name="date_issue" id="date_issue" required>
+                  <div class="invalid-feedback">Vui lòng chọn ngày cấp</div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                   <label class="form-label required">Bộ Phận</label>
-                  <input type="text" class="form-control" name="department" placeholder="Nhập tên bộ phận" required>
+                  <input type="text" class="form-control" name="department" id="department" list="departmentList" placeholder="Nhập hoặc chọn bộ phận" required>
+                  <datalist id="departmentList">
+                    {% for dept in departments if departments %}
+                    <option value="{{ dept }}">
+                    {% endfor %}
+                  </datalist>
+                  <div class="invalid-feedback">Vui lòng nhập bộ phận</div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                   <label class="form-label required">Tình Trạng</label>
-                  <select class="form-select" name="status" required>
+                  <select class="form-select" name="status" id="status" required>
                     <option value="">Chọn tình trạng</option>
                     <option value="chạy tốt">Hoạt Động Tốt</option>
                     <option value="đang sửa">Đang Sửa Chữa</option>
                     <option value="hỏng">Đang Hỏng</option>
                   </select>
+                  <div class="invalid-feedback">Vui lòng chọn tình trạng</div>
                 </div>
               </div>
             </div>
+            
             <!-- Ghi chú -->
             <div class="mb-4">
-              <label class="form-label">Ghi Chú</label>
+              <h6 class="card-subtitle mb-3 pb-2 border-bottom"><i class="fas fa-comment-alt me-2"></i>Ghi Chú</h6>
               <textarea class="form-control" name="notes" rows="3" placeholder="Nhập ghi chú nếu có"></textarea>
             </div>
-            <div class="d-grid">
-              <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Lưu Sản Phẩm</button>
+            
+            <div class="d-flex justify-content-between">
+              <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Quay Lại
+              </a>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-2"></i>Lưu Sản Phẩm
+              </button>
             </div>
           </form>
         </div>
@@ -61,4 +84,52 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+  // Xử lý validation form
+  (function() {
+    'use strict';
+    
+    const form = document.getElementById('addProductForm');
+    const serialInput = document.getElementById('serial_number');
+    
+    // Kiểm tra serial đã tồn tại chưa
+    serialInput.addEventListener('change', function() {
+      const serialNumber = this.value.trim();
+      if (serialNumber) {
+        $.ajax({
+          url: '/api/check_serial',
+          type: 'POST',
+          data: {
+            'serial': serialNumber
+          },
+          success: function(response) {
+            if (!response.valid) {
+              serialInput.setCustomValidity('Số seri đã tồn tại');
+              document.getElementById('serialFeedback').textContent = response.message;
+            } else {
+              serialInput.setCustomValidity('');
+            }
+          }
+        });
+      }
+    });
+    
+    // Bootstrap validation
+    form.addEventListener('submit', function(event) {
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      
+      form.classList.add('was-validated');
+    }, false);
+    
+    // Set today as default date
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date_issue').value = today;
+  })();
+</script>
 {% endblock %}
